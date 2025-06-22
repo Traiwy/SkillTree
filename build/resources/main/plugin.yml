@@ -1,0 +1,9 @@
+name: SkillTree
+version: '1.0-SNAPSHOT'
+main: traiwy.skillTree.SkillTree
+api-version: '1.20'
+commands:
+  start:
+    usage: /start
+    description: Opens the skill tree menu
+
