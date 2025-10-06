@@ -1,9 +1,10 @@
 plugins {
     id 'java'
     id("xyz.jpenilla.run-paper") version "2.3.1"
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 
-group = 'traiwy'
+group = 'com.traiwy'
 version = '1.0-SNAPSHOT'
 
 repositories {
@@ -18,9 +19,18 @@ repositories {
     }
 }
 
+shadowJar {
+    configurations = [project.configurations.runtimeClasspath]
+    archiveClassifier.set('')
+}
+
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.20.1-R0.1-SNAPSHOT")
+    compileOnly 'org.projectlombok:lombok:1.18.34'
+    annotationProcessor 'org.projectlombok:lombok:1.18.34'
+    implementation 'com.zaxxer:HikariCP:5.0.1'
 }
+
 
 tasks {
     runServer {

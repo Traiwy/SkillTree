@@ -1,0 +1,19 @@
+achievement:
+  warrior:
+    achievement1:
+      name: "Воин"
+      task: "Убить 5 зомби"
+    achievement2:
+      name: "Лучник"
+      task: "Убить 3 скелетов"
+    achievement3:
+      name: "Лучник"
+      task: "Убить 3 скелетов"
+
+
+mysql:
+  host: 127.0.0.1
+  port: 3306
+  user: root
+  password: root
+  database: test

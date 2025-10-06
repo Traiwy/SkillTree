@@ -1,6 +1,6 @@
 name: SkillTree
 version: '1.0-SNAPSHOT'
-main: traiwy.skillTree.SkillTree
+main: ru.traiwy.skilltree.util.SkillTree
 api-version: '1.20'
 commands:
   start:
