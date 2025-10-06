@@ -5,20 +5,20 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.checkerframework.checker.units.qual.A;
 import ru.traiwy.skilltree.util.ItemMetaUtils;
-import ru.traiwy.skilltree.util.MenuManager;
 
 import java.util.Arrays;
 
 
 @AllArgsConstructor
-public class ChoiceMenuHolder implements MenuManager, InventoryHolder {
+public class ChoiceMenuHolder implements InventoryHolder, Listener {
     private WarriorMenuHolder warriorMenuHolder;
     private FarmerMenuHolder farmerMenuHolder;
     private AlchemistMenuHolder alchemistMenuHolder;
@@ -29,7 +29,6 @@ public class ChoiceMenuHolder implements MenuManager, InventoryHolder {
 
         final ItemStack filler = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
         ItemMeta fillerMeta = filler.getItemMeta();
-        fillerMeta.setDisplayName(ChatColor.RESET + "");
         filler.setItemMeta(fillerMeta);
         for (int i = 0; i < 27; i++) {
             inventory.setItem(i, filler);
@@ -51,7 +50,7 @@ public class ChoiceMenuHolder implements MenuManager, InventoryHolder {
         return inventory;
     }
 
-    @Override
+    @EventHandler
     public void onClickInventoryPlayer(InventoryClickEvent event) {
         final Player player = (Player) event.getWhoClicked();
         final Inventory inv = event.getClickedInventory();

@@ -55,4 +55,24 @@ public class MySqlStorage implements Storage{
         }
     }
 
+    @Override
+    public void getPlayerProgress(String name) {
+
+    }
+
+    @Override
+    public void updateTask(String name, int taskId, boolean completed) {
+
+    }
+
+    @Override
+    public boolean isTaskCompleted(String name, int taskId) {
+        return false;
+    }
+
+    @Override
+    public int getCompletedTasksCount(String name) {
+        return 0;
+    }
+
 }
