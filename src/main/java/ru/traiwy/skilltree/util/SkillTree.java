@@ -15,7 +15,8 @@ public final class SkillTree extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        final ConfigManager configManager = new ConfigManager(this, "config.yml");
+        final ConfigManager configManager = new ConfigManager(this, getConfig());
+        configManager.load(getConfig());
 
 
         final WarriorMenuHolder warriorMenuHolder = new WarriorMenuHolder();
