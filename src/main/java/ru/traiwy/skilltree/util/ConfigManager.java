@@ -9,6 +9,9 @@ import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
+import ru.traiwy.skilltree.enums.Skill;
+import ru.traiwy.skilltree.enums.Status;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,12 +19,16 @@ import static org.bukkit.Bukkit.getLogger;
 
 
 @Slf4j
+
 public class ConfigManager {
     private final JavaPlugin plugin;
     private FileConfiguration config;
 
+    @Getter
     private final List<GUI.TASK> warriorTask = new ArrayList<>();
+    @Getter
     private final List<GUI.TASK> alchemistTask = new ArrayList<>();
+    @Getter
     private final List<GUI.TASK> farmerTask = new ArrayList<>();
 
     public ConfigManager(JavaPlugin plugin, FileConfiguration file) {
@@ -121,5 +128,16 @@ public class ConfigManager {
             }
         }
     }
+     public List<GUI.TASK> getTasks(Skill skill) {
+        if (skill == null) return new ArrayList<>();
 
+        return switch (skill.name().toLowerCase()) {
+            case "warrior" -> warriorTask;
+            case "alchemist" -> alchemistTask;
+            case "farmer" -> farmerTask;
+            default -> new ArrayList<>();
+        };
+    }
 }
+
+

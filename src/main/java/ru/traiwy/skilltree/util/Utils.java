@@ -16,4 +16,5 @@ public class Utils {
             inventory.setItem(SLOTS_PANEL[i], panel);
         }
     }
+
 }

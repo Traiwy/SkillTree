@@ -29,13 +29,13 @@ public class StartCommand implements CommandExecutor {
          if(mySqlStorage.isChecked(player.getName())){
              Skill skill = mySqlStorage.getSkill(player.getName());
              if(skill == Skill.WARRIOR){
-                    player.openInventory(warriorMenu.getInventory());
+                    warriorMenu.openInventory(player);
                     mySqlStorage.updateTask(player.getName(), 1, Status.IN_PROGRESS);
                 } else if(skill == Skill.FARMER){
-                    player.openInventory(farmerMenuHolder.getInventory());
+                    farmerMenuHolder.openInventory(player);
                     mySqlStorage.updateTask(player.getName(), 1, Status.IN_PROGRESS);
                 } else if(skill == Skill.ALCHEMIST){
-                    player.openInventory(alchemistMenu.getInventory());
+                    alchemistMenu.openInventory(player);
                     mySqlStorage.updateTask(player.getName(), 1, Status.IN_PROGRESS);
              }
          }else{

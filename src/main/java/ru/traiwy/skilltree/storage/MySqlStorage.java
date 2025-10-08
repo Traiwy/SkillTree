@@ -41,10 +41,10 @@ public class MySqlStorage implements Storage {
 
     @Override
     public void setSkill(String name, Skill characterSkill) {
-        try(Connection connection = dataSource.getConnection()){
-            try(final PreparedStatement ps = connection.prepareStatement("""
+        try (Connection connection = dataSource.getConnection()) {
+            try (final PreparedStatement ps = connection.prepareStatement("""
                     INSERT INTO skilltree (player_name, class) VALUES (?, ?)
-                    """)){
+                    """)) {
                 ps.setString(1, name);
                 ps.setString(2, characterSkill.name());
                 ps.executeUpdate();
@@ -82,7 +82,7 @@ public class MySqlStorage implements Storage {
 
     @Override
     public void getProgress(String name) {
-        try(Connection connection = dataSource.getConnection()){
+        try (Connection connection = dataSource.getConnection()) {
 
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -92,11 +92,12 @@ public class MySqlStorage implements Storage {
     @Override
     public void updateTask(String name, int taskId, Status status) {
         String columnName = "task" + taskId;
-        try(Connection connection = dataSource.getConnection()){
-            try(final PreparedStatement ps = connection.prepareStatement(
+        try (Connection connection = dataSource.getConnection()) {
+            try (final PreparedStatement ps = connection.prepareStatement(
                     "UPDATE skilltree SET " +
                             columnName + " = ? " +
-                            "WHERE player_name = ?")){;
+                            "WHERE player_name = ?")) {
+                ;
                 ps.setString(1, status.name());
                 ps.setString(2, name);
                 ps.executeUpdate();
@@ -110,10 +111,28 @@ public class MySqlStorage implements Storage {
 
     @Override
     public boolean isTaskCompleted(String name, int taskId) {
+        String sql = "SELECT task" + taskId + " FROM skilltree WHERE player_name = ?";
+
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+
+            ps.setString(1, name);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    String status = rs.getString("task" + taskId);
+                    return "COMPLETED".equals(status);
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         return false;
     }
 
-    @Override
+
+        @Override
     public boolean isChecked(String name) {
         try (Connection connection = dataSource.getConnection();
              PreparedStatement ps = connection.prepareStatement("""
@@ -150,6 +169,31 @@ public class MySqlStorage implements Storage {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public Status getStatus(String name, int taskId) {
+        String sql = "SELECT task" + taskId + " FROM skilltree WHERE player_name = ?";
+        try (Connection connection = dataSource.getConnection()) {
+            String columnName = "task" + taskId;
+            try (final PreparedStatement ps = connection.prepareStatement(sql)) {
+                ps.setString(1, name);
+
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        String statusStr = rs.getString(columnName);
+                        if (statusStr != null) {
+                            return Status.valueOf(statusStr);
+                        }
+                    }
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
 

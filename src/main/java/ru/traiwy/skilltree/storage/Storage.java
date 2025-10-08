@@ -12,5 +12,6 @@ public interface Storage {
     boolean isChecked(String name);
     int getCompletedTasksCount(String name);
     void deleteSkill(String name);
+    Status getStatus(String name, int taskId);
 
 }

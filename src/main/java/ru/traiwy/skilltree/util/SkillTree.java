@@ -17,11 +17,11 @@ public final class SkillTree extends JavaPlugin {
         final ConfigManager configManager = new ConfigManager(this, getConfig());
         configManager.load(getConfig());
         final MySqlStorage mySqlStorage = new MySqlStorage();
+        final PanelManager panelManager = new PanelManager(configManager, mySqlStorage);
 
-
-        final WarriorMenu warriorMenu = new WarriorMenu();
-        final FarmerMenu farmerMenuHolder = new FarmerMenu();
-        final AlchemistMenu alchemistMenu = new AlchemistMenu();
+        final WarriorMenu warriorMenu = new WarriorMenu(panelManager);
+        final FarmerMenu farmerMenuHolder = new FarmerMenu(panelManager);
+        final AlchemistMenu alchemistMenu = new AlchemistMenu(panelManager);
 
         final ChoiceMenu choiceMenu = new ChoiceMenu(
                 warriorMenu,
