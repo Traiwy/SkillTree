@@ -68,8 +68,6 @@ public class ConfigManager {
         for (GUI.TASK a : farmerTask) {
             getLogger().info("[Farmer] " + a.getName() + " — " + a.getTask());
         }
-
-
     }
 
     private static void loadMysql(ConfigurationSection sqlSection){

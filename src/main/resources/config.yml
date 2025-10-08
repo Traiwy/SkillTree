@@ -9,7 +9,7 @@ gui:
         task: "Убить 3 скелетов"
       task3:
         name: "Охотник"
-        task: "Убить 2 пауков"
+        tas k: "Убить 2 пауков"
       task4:
         name: "Герой деревни"
         task: "Защитить деревню от рейда"
@@ -92,5 +92,5 @@ mysql:
   port: 3306
   user: root
   password: root
-  database: test
+  database: achivmentclass
 

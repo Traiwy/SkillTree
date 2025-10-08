@@ -6,4 +6,6 @@ commands:
   start:
     usage: /start
     description: Opens the skill tree menu
-
+  delete:
+    usage: /delete
+    description: Deletes your skill tree progress
