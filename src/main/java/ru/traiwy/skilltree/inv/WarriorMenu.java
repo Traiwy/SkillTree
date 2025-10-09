@@ -11,8 +11,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import ru.traiwy.skilltree.enums.Skill;
-import ru.traiwy.skilltree.util.PanelManager;
-import ru.traiwy.skilltree.util.Utils;
+import ru.traiwy.skilltree.manager.PanelManager;
 
 
 @AllArgsConstructor
@@ -28,11 +27,14 @@ public class WarriorMenu implements InventoryHolder, Listener {
 
     @EventHandler
     public void onClickInventoryPlayer(InventoryClickEvent event) {
-
+        if(inventory.getHolder() ==  this){
+            event.setCancelled(true);
+        }
     }
     public void openInventory(Player player){
         player.openInventory(inventory);
-        panelManager.setPanels(player, Skill.WARRIOR);
-        Utils.fillPanelSlots(inventory, new ItemStack(Material.BLACK_STAINED_GLASS_PANE));
+        panelManager.setPanels(player, Skill.WARRIOR, inventory);
+        panelManager.fillPanelSlots(inventory, new ItemStack(Material.BLACK_STAINED_GLASS_PANE));
+
     }
 }

@@ -24,24 +24,33 @@ public class StartCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-         if(!(sender instanceof Player player)) return true;
+        if (!(sender instanceof Player player)) return true;
 
-         if(mySqlStorage.isChecked(player.getName())){
-             Skill skill = mySqlStorage.getSkill(player.getName());
-             if(skill == Skill.WARRIOR){
-                    warriorMenu.openInventory(player);
+        if (mySqlStorage.isChecked(player.getName())) {
+            Skill skill = mySqlStorage.getSkill(player.getName());
+            if (skill == Skill.WARRIOR) {
+                if (mySqlStorage.getStatus(player.getName(), 2) == Status.NOT_STARTED) {
                     mySqlStorage.updateTask(player.getName(), 1, Status.IN_PROGRESS);
-                } else if(skill == Skill.FARMER){
-                    farmerMenuHolder.openInventory(player);
-                    mySqlStorage.updateTask(player.getName(), 1, Status.IN_PROGRESS);
-                } else if(skill == Skill.ALCHEMIST){
-                    alchemistMenu.openInventory(player);
-                    mySqlStorage.updateTask(player.getName(), 1, Status.IN_PROGRESS);
-             }
-         }else{
-              player.openInventory(choiceMenu.getInventory());
-         }
+                }
+                warriorMenu.openInventory(player);
 
-         return true;
+
+            } else if (skill == Skill.FARMER) {
+                if (mySqlStorage.getStatus(player.getName(), 2) == Status.NOT_STARTED) {
+                    mySqlStorage.updateTask(player.getName(), 1, Status.IN_PROGRESS);
+                }
+                farmerMenuHolder.openInventory(player);
+
+            } else if (skill == Skill.ALCHEMIST) {
+                if (mySqlStorage.getStatus(player.getName(), 2) == Status.NOT_STARTED) {
+                    mySqlStorage.updateTask(player.getName(), 1, Status.IN_PROGRESS);
+                }
+                alchemistMenu.openInventory(player);
+            }
+        } else {
+            player.openInventory(choiceMenu.getInventory());
+        }
+
+        return true;
     }
 }

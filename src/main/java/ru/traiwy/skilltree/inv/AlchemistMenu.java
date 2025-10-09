@@ -11,31 +11,56 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import ru.traiwy.skilltree.enums.Skill;
-import ru.traiwy.skilltree.util.PanelManager;
-import ru.traiwy.skilltree.util.Utils;
+import ru.traiwy.skilltree.manager.PanelManager;
+import ru.traiwy.skilltree.util.ItemMetaUtils;
 
-import static ru.traiwy.skilltree.util.Utils.SLOTS_PANEL;
+import java.util.Collections;
+
+
 @AllArgsConstructor
 public class AlchemistMenu implements InventoryHolder, Listener {
     private final PanelManager panelManager;
     private final Inventory inventory = Bukkit.createInventory(this, 54, "Путь алхимика");
 
+    private void setupInventory(Player player){
+        inventory.close();
+
+        final ItemStack playerHead = new ItemStack(Material.PLAYER_HEAD);
+        final ItemStack paper = new ItemStack(Material.PAPER);
+
+        ItemMetaUtils.applyItemMeta(
+                playerHead,
+                "Ваш никнейм: " + player.getName(),
+                Collections.singletonList("Ваш класс: " + Skill.ALCHEMIST.name()));
+
+        ItemMetaUtils.applyItemMeta(
+                paper,
+                "Ваши способности: ",
+                Collections.singletonList("Создавать зелья")
+        );
+
+        inventory.setItem(10, playerHead);
+        inventory.setItem(11, paper);
+
+        panelManager.fillPanelSlots(inventory, new ItemStack(Material.BLACK_STAINED_GLASS_PANE));
+    }
+
     @Override
     public Inventory getInventory() {
-
         return inventory;
     }
 
-
-
     @EventHandler
     public void onClickInventoryPlayer(InventoryClickEvent event) {
-
+        if(inventory.getHolder() ==  this){
+            event.setCancelled(true);
+        }
     }
     public void openInventory(Player player){
+        setupInventory(player);
+        panelManager.setPanels(player, Skill.ALCHEMIST, inventory);
         player.openInventory(inventory);
-        panelManager.setPanels(player, Skill.ALCHEMIST);
-        Utils.fillPanelSlots(inventory, new ItemStack(Material.BLACK_STAINED_GLASS_PANE));
+
     }
 
 }
