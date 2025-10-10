@@ -9,7 +9,7 @@ import org.jetbrains.annotations.NotNull;
 import ru.traiwy.skilltree.storage.MySqlStorage;
 
 @AllArgsConstructor
-public class DeleteSkillCommand implements CommandExecutor {
+public class DeleteCommand implements CommandExecutor {
     private final MySqlStorage mySqlStorage;
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {

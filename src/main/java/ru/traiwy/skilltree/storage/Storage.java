@@ -16,7 +16,7 @@ public interface Storage {
     Status getStatus(String name, int taskId);
 
 
-     int getProgress(String name, int taskId);
-     void updateProgress(String name, int taskId, int progress, Skill skill);
+     int getProgress(String name);
+     void updateProgress(String name, int progress);
 
 }

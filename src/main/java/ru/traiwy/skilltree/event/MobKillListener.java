@@ -24,31 +24,45 @@ public class MobKillListener implements Listener {
 
         if (mobType.equalsIgnoreCase("zombie")) {
             if (mySqlStorage.getStatus(killer.getName(), 1) == Status.IN_PROGRESS) {
-                updateKillModCount(killer, 1, 10, Skill.WARRIOR);
+                updateKillModCount(killer, 1, 5);
             }
+            if (mySqlStorage.getProgress(killer.getName()) == 5 &&
+                    mySqlStorage.getStatus(killer.getName(), 1) == Status.COMPLETED) {
+
+                mySqlStorage.updateTask(killer.getName(), 2, Status.IN_PROGRESS);
+                mySqlStorage.updateProgress(killer.getName(), 0);
+            }
+
         }
 
         if (mobType.equalsIgnoreCase("skeleton")) {
             if (mySqlStorage.getStatus(killer.getName(), 2) == Status.IN_PROGRESS) {
-                updateKillModCount(killer, 2, 3, Skill.WARRIOR);
+                updateKillModCount(killer, 2, 3);
+            }
+            if(mySqlStorage.getProgress(killer.getName()) == 3 &&
+                mySqlStorage.getStatus(killer.getName(), 2) == Status.COMPLETED){
+                mySqlStorage.updateTask(killer.getName(), 3, Status.IN_PROGRESS);
+                mySqlStorage.updateProgress(killer.getName(), 0);
             }
         }
 
         if (mobType.equalsIgnoreCase("spider")) {
             if (mySqlStorage.getStatus(killer.getName(), 3) == Status.IN_PROGRESS) {
-                updateKillModCount(killer, 3, 2, Skill.WARRIOR);
+                updateKillModCount(killer, 3, 2);
+                mySqlStorage.updateTask(killer.getName(), 4, Status.IN_PROGRESS);
+                mySqlStorage.updateProgress(killer.getName(), 0);
             }
         }
 
         if (mobType.equalsIgnoreCase("witch")) {
             if (mySqlStorage.getStatus(killer.getName(), 7) == Status.IN_PROGRESS) {
-                updateKillModCount(killer, 7, 1, Skill.WARRIOR);
+                updateKillModCount(killer, 7, 1);
             }
         }
 
         if (mobType.equalsIgnoreCase("ender_dragon")) {
             if (mySqlStorage.getStatus(killer.getName(), 1) == Status.IN_PROGRESS) {
-                updateKillModCount(killer, 9, 1, Skill.WARRIOR);
+                updateKillModCount(killer, 9, 1);
             }
         }
 
@@ -63,10 +77,11 @@ public class MobKillListener implements Listener {
         else return "other";
     }
 
-    private void updateKillModCount(Player player, int taskId, int kills, Skill skill){
-        int currentCount = mySqlStorage.getProgress(player.getName(), taskId);
+    private void updateKillModCount(Player player, int taskId, int kills){
+
+        int currentCount = mySqlStorage.getProgress(player.getName());
         int newCount = currentCount + 1;
-        mySqlStorage.updateProgress(player.getName(), taskId, newCount, skill);
+        mySqlStorage.updateProgress(player.getName(), newCount);
 
         int requiredKills  = getRequiredKills(kills);
         if(newCount >= requiredKills){

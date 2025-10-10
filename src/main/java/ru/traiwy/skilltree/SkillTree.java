@@ -1,6 +1,6 @@
 package ru.traiwy.skilltree;
 
-import ru.traiwy.skilltree.command.DeleteSkillCommand;
+import ru.traiwy.skilltree.command.DeleteCommand;
 import ru.traiwy.skilltree.command.StartCommand;
 import ru.traiwy.skilltree.event.MobKillListener;
 import ru.traiwy.skilltree.inv.AlchemistMenu;
@@ -33,7 +33,7 @@ public final class SkillTree extends JavaPlugin {
                 alchemistMenu,
                 mySqlStorage);
         getCommand("start").setExecutor(new StartCommand(mySqlStorage, choiceMenu, warriorMenu, farmerMenuHolder, alchemistMenu));
-        getCommand("delete").setExecutor(new DeleteSkillCommand(mySqlStorage));
+        getCommand("delete").setExecutor(new DeleteCommand(mySqlStorage));
         getServer().getPluginManager().registerEvents(choiceMenu, this);
         getServer().getPluginManager().registerEvents(new MobKillListener(mySqlStorage), this);
 

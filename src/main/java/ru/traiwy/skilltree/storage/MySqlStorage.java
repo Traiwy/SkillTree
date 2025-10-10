@@ -188,12 +188,11 @@ public class MySqlStorage implements Storage {
     }
 
     @Override
-    public int getProgress(String name, int taskId) {
-        String sql = "SELECT progress FROM skilltree WHERE player_name = ? AND task" + taskId + " = ?";
+    public int getProgress(String name) {
+        String sql = "SELECT progress FROM skilltree WHERE player_name = ?";
         try (Connection connection = dataSource.getConnection()) {
             try (final PreparedStatement ps = connection.prepareStatement(sql)) {
                 ps.setString(1, name);
-                ps.setInt(2, taskId);
 
                 try (ResultSet rs = ps.executeQuery()) {
                     if (rs.next()) {
@@ -210,18 +209,14 @@ public class MySqlStorage implements Storage {
     }
 
     @Override
-    public void updateProgress(String name, int taskId, int progress, Skill skill) {
-        String column = "task" + taskId;
+    public void updateProgress(String name, int progress ) {
 
-        String sql = "UPDATE skilltree SET " + column + " = ?, progress = ? " +
-                "WHERE player_name = ? AND class = ?";
+         String sql = "UPDATE skilltree SET progress = ? WHERE player_name = ?";
 
         try (Connection connection = dataSource.getConnection()) {
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
                 ps.setInt(1, progress);
-                ps.setInt(2, progress);
-                ps.setString(3, name);
-                ps.setString(4, skill.name());
+                ps.setString(2, name);
 
                 ps.executeUpdate();
             } catch (SQLException e) {

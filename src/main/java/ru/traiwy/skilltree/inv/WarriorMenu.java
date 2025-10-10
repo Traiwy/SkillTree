@@ -27,8 +27,14 @@ public class WarriorMenu implements InventoryHolder, Listener {
 
     @EventHandler
     public void onClickInventoryPlayer(InventoryClickEvent event) {
+        final Player player = (Player) event.getWhoClicked();
+        final ItemStack item = event.getCurrentItem();
+
         if(inventory.getHolder() ==  this){
             event.setCancelled(true);
+        }
+        if(item.getType() ==  Material.GREEN_STAINED_GLASS_PANE){
+            player.sendMessage("Вы получили награду");
         }
     }
     public void openInventory(Player player){

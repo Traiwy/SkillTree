@@ -66,13 +66,17 @@ tasks {
         archiveClassifier.set('')
         archiveVersion.set(version)
 
-        relocate 'com.zaxxer.hikari', 'com.traiwy.skilltree.libs.hikari'
-        relocate 'com.mysql', 'com.traiwy.skilltree.libs.mysql'
+        relocate 'com.zaxxer.hikari', 'ru.traiwy.skilltree.libs.hikari'
+        relocate 'com.mysql', 'ru.traiwy.skilltree.libs.mysql'
 
         configurations = [project.configurations.runtimeClasspath]
     }
 
     build {
         dependsOn shadowJar
+    }
+
+    tasks.withType(JavaCompile) {
+        options.encoding = 'UTF-8'
     }
 }

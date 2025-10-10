@@ -11,7 +11,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import ru.traiwy.skilltree.enums.Skill;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import static org.bukkit.Bukkit.getLogger;

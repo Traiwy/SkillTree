@@ -26,31 +26,43 @@ public class StartCommand implements CommandExecutor {
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (!(sender instanceof Player player)) return true;
 
-        if (mySqlStorage.isChecked(player.getName())) {
-            Skill skill = mySqlStorage.getSkill(player.getName());
-            if (skill == Skill.WARRIOR) {
-                if (mySqlStorage.getStatus(player.getName(), 2) == Status.NOT_STARTED) {
-                    mySqlStorage.updateTask(player.getName(), 1, Status.IN_PROGRESS);
-                }
-                warriorMenu.openInventory(player);
+        try {
+            if (mySqlStorage.isChecked(player.getName())) {
+                Skill skill = mySqlStorage.getSkill(player.getName());
 
 
-            } else if (skill == Skill.FARMER) {
-                if (mySqlStorage.getStatus(player.getName(), 2) == Status.NOT_STARTED) {
+                if (mySqlStorage.getStatus(player.getName(), 1) == Status.NOT_STARTED) {
                     mySqlStorage.updateTask(player.getName(), 1, Status.IN_PROGRESS);
                 }
-                farmerMenuHolder.openInventory(player);
+                activateNextTask(player, 1, 2);
+                activateNextTask(player, 2, 3);
+                activateNextTask(player, 3, 4);
+                activateNextTask(player, 5, 6);
+                activateNextTask(player, 6, 7);
+                activateNextTask(player, 7, 8);
+                activateNextTask(player, 8, 9);
 
-            } else if (skill == Skill.ALCHEMIST) {
-                if (mySqlStorage.getStatus(player.getName(), 2) == Status.NOT_STARTED) {
-                    mySqlStorage.updateTask(player.getName(), 1, Status.IN_PROGRESS);
+                switch (skill) {
+                    case WARRIOR -> warriorMenu.openInventory(player);
+                    case FARMER -> farmerMenuHolder.openInventory(player);
+                    case ALCHEMIST -> alchemistMenu.openInventory(player);
                 }
-                alchemistMenu.openInventory(player);
+            } else {
+                player.openInventory(choiceMenu.getInventory());
             }
-        } else {
-            player.openInventory(choiceMenu.getInventory());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
-
         return true;
+    }
+
+    private void activateNextTask(Player player, int lastTask, int nextTask) {
+        Status lastTaskStatus = mySqlStorage.getStatus(player.getName(), lastTask);
+        Status nextTaskStatus = mySqlStorage.getStatus(player.getName(), nextTask);
+
+
+        if (lastTaskStatus == Status.COMPLETED && nextTaskStatus == Status.NOT_STARTED) {
+            mySqlStorage.updateTask(player.getName(), nextTask, Status.IN_PROGRESS);
+        }
     }
 }
