@@ -3,6 +3,7 @@ package ru.traiwy.skilltree;
 import ru.traiwy.skilltree.command.DeleteCommand;
 import ru.traiwy.skilltree.command.StartCommand;
 import ru.traiwy.skilltree.event.MobKillListener;
+import ru.traiwy.skilltree.event.RaidFinishListener;
 import ru.traiwy.skilltree.inv.AlchemistMenu;
 import ru.traiwy.skilltree.inv.ChoiceMenu;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -36,6 +37,7 @@ public final class SkillTree extends JavaPlugin {
         getCommand("delete").setExecutor(new DeleteCommand(mySqlStorage));
         getServer().getPluginManager().registerEvents(choiceMenu, this);
         getServer().getPluginManager().registerEvents(new MobKillListener(mySqlStorage), this);
+        getServer().getPluginManager().registerEvents(new RaidFinishListener(mySqlStorage), this);
 
     }
 

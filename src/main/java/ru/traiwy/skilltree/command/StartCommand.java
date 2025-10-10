@@ -56,7 +56,7 @@ public class StartCommand implements CommandExecutor {
         return true;
     }
 
-    private void activateNextTask(Player player, int lastTask, int nextTask) {
+    public void activateNextTask(Player player, int lastTask, int nextTask) {
         Status lastTaskStatus = mySqlStorage.getStatus(player.getName(), lastTask);
         Status nextTaskStatus = mySqlStorage.getStatus(player.getName(), nextTask);
 
