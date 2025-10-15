@@ -49,8 +49,12 @@ public class MobKillListener implements Listener {
         if (mobType.equalsIgnoreCase("spider")) {
             if (mySqlStorage.getStatus(killer.getName(), 3) == Status.IN_PROGRESS) {
                 updateKillModCount(killer, 3, 2);
+            }
+            if(mySqlStorage.getProgress(killer.getName()) == 4 &&
+                    mySqlStorage.getStatus(killer.getName(), 3) == Status.COMPLETED){
                 mySqlStorage.updateTask(killer.getName(), 4, Status.IN_PROGRESS);
                 mySqlStorage.updateProgress(killer.getName(), 0);
+
             }
         }
 
