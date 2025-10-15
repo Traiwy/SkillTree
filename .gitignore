@@ -11,5 +11,5 @@ build/
 *.data
 
 # Игнорируем настройки с паролями
-config.yml
+bd.yml
 *.env
