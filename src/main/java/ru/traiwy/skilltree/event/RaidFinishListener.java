@@ -19,14 +19,14 @@ public class RaidFinishListener implements Listener {
 
     @EventHandler
     public void onRaidFinish(RaidStopEvent event) {
-        if (event.getReason() == RaidStopEvent.Reason.FINISHED) {
-        for (Player player : event.getRaid().getHeroes()) {
-            Status status = mySqlStorage.getStatus(player.getName(), RAID_TASK);
-            if (status == Status.IN_PROGRESS) {
-                mySqlStorage.updateTask(player.getName(), RAID_TASK, Status.COMPLETED);
-                player.sendMessage("Вы завершили задание на прохождение рейда!");
-            }
-        }
+        //if (event.getReason() == RaidStopEvent.Reason.FINISHED) {
+        //for (Player player : event.getRaid().getHeroes()) {
+        //    Status status = mySqlStorage.getStatus(player.getName(), RAID_TASK);
+        //    if (status == Status.IN_PROGRESS) {
+        //        mySqlStorage.updateTask(player.getName(), RAID_TASK, Status.COMPLETED);
+        //        player.sendMessage("Вы завершили задание на прохождение рейда!");
+        //    }
+        //}
     }
     }
-}
+

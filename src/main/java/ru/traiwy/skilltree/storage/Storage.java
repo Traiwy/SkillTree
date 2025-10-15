@@ -4,6 +4,8 @@ import ru.traiwy.skilltree.enums.Skill;
 import ru.traiwy.skilltree.enums.Status;
 
 public interface Storage {
+    void createTable();
+
     void setSkill(String name, Skill characterSkill);
     Skill getSkill(String name);
 

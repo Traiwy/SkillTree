@@ -5,11 +5,14 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 import ru.traiwy.skilltree.enums.Skill;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,7 +22,8 @@ import static org.bukkit.Bukkit.getLogger;
 @Slf4j
 public class ConfigManager {
     private final JavaPlugin plugin;
-    private FileConfiguration config;
+    private FileConfiguration mainConfig;
+    private FileConfiguration bdConfig;
 
     private final List<GUI.TASK> warriorTask = new ArrayList<>();
     private final List<GUI.TASK> alchemistTask = new ArrayList<>();
@@ -27,20 +31,45 @@ public class ConfigManager {
 
     public ConfigManager(JavaPlugin plugin, FileConfiguration file) {
         this.plugin = plugin;
-        config = file;
-
     }
 
     public void load(FileConfiguration config){
-        final var mysql = config.getConfigurationSection("mysql");
-        if (mysql == null) {
-            throw new IllegalStateException("Error load my sqlSection");
-        } else {
-            loadMysql(mysql);
+        try{
+            loadMainConfig();
+            loadDataBaseConfig();
+            parseGui(mainConfig);
+        } catch (Exception e) {
+             throw new IllegalStateException("Ошибка загрузки конфигурации", e);
         }
-        plugin.getLogger().info("config.yml loaded");
-         parseGui(config);
     }
+    public void loadMainConfig() {
+        plugin.saveDefaultConfig();
+        plugin.reloadConfig();
+        this.mainConfig = plugin.getConfig();
+
+        if (mainConfig == null) {
+            throw new IllegalStateException("Основной config.yml не загружен!");
+        }
+    }
+
+    public void loadDataBaseConfig() {
+        File dbFile = new File(plugin.getDataFolder(), "bd.yml");
+
+        if (!dbFile.exists()) {
+            plugin.saveResource("bd.yml", false);
+        }
+
+        this.bdConfig = YamlConfiguration.loadConfiguration(dbFile);
+
+        ConfigurationSection mysqlSection = bdConfig.getConfigurationSection("mysql");
+        if (mysqlSection == null) {
+            throw new IllegalStateException("Секция 'mysql' не найдена в bd.yml!");
+        }
+
+        loadMysql(mysqlSection);
+
+    }
+
 
     public void parseGui(FileConfiguration config) {
         final ConfigurationSection section = config.getConfigurationSection("gui.task");
@@ -77,6 +106,11 @@ public class ConfigManager {
         MySQL.USER = sqlSection.getString("user");
         MySQL.PASSWORD = sqlSection.getString("password");
         MySQL.DATABASE = sqlSection.getString("database");
+        log.info(sqlSection.getString("host"));
+        log.info(sqlSection.getString("port"));
+        log.info(sqlSection.getString("port"));
+        log.info(sqlSection.getString("password"));
+        log.info(sqlSection.getString("database"));
     }
 
 

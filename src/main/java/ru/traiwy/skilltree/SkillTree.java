@@ -18,9 +18,12 @@ public final class SkillTree extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        saveDefaultConfig();
+        saveResource("bd.yml", false);
         final ConfigManager configManager = new ConfigManager(this, getConfig());
         configManager.load(getConfig());
         final MySqlStorage mySqlStorage = new MySqlStorage();
+        mySqlStorage.createTable();
         final PanelManager panelManager = new PanelManager(configManager, mySqlStorage);
 
         final WarriorMenu warriorMenu = new WarriorMenu(panelManager);

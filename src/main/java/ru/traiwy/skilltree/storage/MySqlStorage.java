@@ -40,6 +40,37 @@ public class MySqlStorage implements Storage {
     }
 
     @Override
+    public void createTable() {
+        String sql = """
+                CREATE TABLE IF NOT EXISTS skilltree (
+                    player_name VARCHAR(36) PRIMARY KEY,
+                    class VARCHAR(20),
+                    task1 VARCHAR(20) DEFAULT 'NOT_STARTED',
+                    task2 VARCHAR(20) DEFAULT 'NOT_STARTED',
+                    task3 VARCHAR(20) DEFAULT 'NOT_STARTED',
+                    task4 VARCHAR(20) DEFAULT 'NOT_STARTED',
+                    task5 VARCHAR(20) DEFAULT 'NOT_STARTED',
+                    task6 VARCHAR(20) DEFAULT 'NOT_STARTED',
+                    task7 VARCHAR(20) DEFAULT 'NOT_STARTED',
+                    task8 VARCHAR(20) DEFAULT 'NOT_STARTED',
+                    task9 VARCHAR(20) DEFAULT 'NOT_STARTED',
+                    progress INT DEFAULT 0
+                );
+                """;
+
+            try (Connection connection = dataSource.getConnection()) {
+                try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                    ps.executeUpdate();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+    }
+
+
+    @Override
     public void setSkill(String name, Skill characterSkill) {
         try (Connection connection = dataSource.getConnection()) {
             try (final PreparedStatement ps = connection.prepareStatement("""
