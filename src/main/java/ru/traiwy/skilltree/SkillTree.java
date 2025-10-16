@@ -1,7 +1,6 @@
 package ru.traiwy.skilltree;
 
-import ru.traiwy.skilltree.command.DeleteCommand;
-import ru.traiwy.skilltree.command.StartCommand;
+import ru.traiwy.skilltree.command.AdminCommand;
 import ru.traiwy.skilltree.event.MobKillListener;
 import ru.traiwy.skilltree.event.RaidFinishListener;
 import ru.traiwy.skilltree.inv.AlchemistMenu;
@@ -23,7 +22,7 @@ public final class SkillTree extends JavaPlugin {
         final ConfigManager configManager = new ConfigManager(this, getConfig());
         configManager.load(getConfig());
         final MySqlStorage mySqlStorage = new MySqlStorage();
-        mySqlStorage.createTable();
+        mySqlStorage.initDatabase();
         final PanelManager panelManager = new PanelManager(configManager, mySqlStorage);
 
         final WarriorMenu warriorMenu = new WarriorMenu(panelManager);
@@ -35,9 +34,10 @@ public final class SkillTree extends JavaPlugin {
                 warriorMenu,
                 farmerMenuHolder,
                 alchemistMenu,
-                mySqlStorage);
-        getCommand("start").setExecutor(new StartCommand(mySqlStorage, choiceMenu, warriorMenu, farmerMenuHolder, alchemistMenu));
-        getCommand("delete").setExecutor(new DeleteCommand(mySqlStorage));
+                mySqlStorage,
+                configManager,
+                this);
+        getCommand("skilltree").setExecutor(new AdminCommand(mySqlStorage, choiceMenu));
         getServer().getPluginManager().registerEvents(choiceMenu, this);
         getServer().getPluginManager().registerEvents(new MobKillListener(mySqlStorage), this);
         getServer().getPluginManager().registerEvents(new RaidFinishListener(mySqlStorage), this);

@@ -40,32 +40,32 @@ public class PanelManager {
     }
 
     private ItemStack getTaskPanel(Player player, ConfigManager.GUI.TASK task, int taskId) {
-        Status taskStatus = mySqlStorage.getStatus(player.getName(), taskId);
-        if (taskStatus == null) {
-            taskStatus = Status.NOT_STARTED;
-        }
-
-        Material panelMaterial;
-
-        switch (taskStatus) {
-            case COMPLETED:
-                panelMaterial = Material.GREEN_STAINED_GLASS_PANE;
-                break;
-            case IN_PROGRESS:
-                panelMaterial = Material.YELLOW_STAINED_GLASS_PANE;
-                break;
-            case NOT_STARTED:
-            default:
-                panelMaterial = Material.RED_STAINED_GLASS_PANE;
-                break;
-        }
-
-        final ItemStack panel = new ItemStack(panelMaterial);
-        ItemMetaUtils.applyItemMeta(panel, task.getName(), List.of(
-                "§7" + task.getTask()
-        ));
-
-        return panel;
+        //Status taskStatus = mySqlStorage.getTask(2);
+        //if (taskStatus == null) {
+        //    taskStatus = Status.NOT_STARTED;
+        //}
+//
+        //Material panelMaterial;
+//
+        //switch (taskStatus) {
+        //    case COMPLETED:
+        //        panelMaterial = Material.GREEN_STAINED_GLASS_PANE;
+        //        break;
+        //    case IN_PROGRESS:
+        //        panelMaterial = Material.YELLOW_STAINED_GLASS_PANE;
+        //        break;
+        //    case NOT_STARTED:
+        //    default:
+        //        panelMaterial = Material.RED_STAINED_GLASS_PANE;
+        //        break;
+        //}
+//
+        //final ItemStack panel = new ItemStack(panelMaterial);
+        //ItemMetaUtils.applyItemMeta(panel, task.getName(), List.of(
+        //        "§7" + task.getTask()
+        //));
+//
+        return null;
     }
 
     public static void fillPanelSlots(Inventory inventory, ItemStack panel) {

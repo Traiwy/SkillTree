@@ -1,7 +1,7 @@
 package ru.traiwy.skilltree.storage;
 
 
-import ru.traiwy.skilltree.data.Player;
+import ru.traiwy.skilltree.data.PlayerData;
 import ru.traiwy.skilltree.data.Task;
 
 import java.util.List;
@@ -9,11 +9,11 @@ import java.util.concurrent.CompletableFuture;
 
 public interface Storage {
 
-    CompletableFuture<Player> getPlayer(String playerName);
-    CompletableFuture<Player> getPlayer(int id);
-    void addPlayer(Player player);
+    CompletableFuture<PlayerData> getPlayer(String playerName);
+    CompletableFuture<PlayerData> getPlayer(int id);
+    void addPlayer(PlayerData player);
     void removePlayer(int id);
-    void updatePlayer(Player player);
+    void updatePlayer(PlayerData player);
 
 
     CompletableFuture<Task> getTask(int id);

@@ -2,8 +2,9 @@ package ru.traiwy.skilltree.storage;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import ru.traiwy.skilltree.data.Player;
+import ru.traiwy.skilltree.data.PlayerData;
 import ru.traiwy.skilltree.data.Task;
+import ru.traiwy.skilltree.enums.Skill;
 import ru.traiwy.skilltree.enums.Status;
 import ru.traiwy.skilltree.manager.ConfigManager;
 
@@ -13,6 +14,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
 
 public class MySqlStorage implements Storage {
     private HikariDataSource dataSource;
@@ -46,7 +48,7 @@ public class MySqlStorage implements Storage {
     }
 
 
-    private void initDatabase() {
+    public void initDatabase() {
         CompletableFuture.runAsync(() -> {
             String playersSql = """
                         CREATE TABLE IF NOT EXISTS players (
@@ -61,8 +63,8 @@ public class MySqlStorage implements Storage {
                         CREATE TABLE IF NOT EXISTS tasks (
                             id INT AUTO_INCREMENT PRIMARY KEY,
                             player_id INT NOT NULL,
-                            task_name VARCHAR(50) NOT NULL,
-                            taskStatus VARCHAR(20) DEFAULT 'NOT_STARTED',
+                            task_name VARCHAR(255) NOT NULL,
+                            status VARCHAR(20) DEFAULT 'NOT_STARTED',
                             FOREIGN KEY (player_id) REFERENCES players(id) ON DELETE CASCADE
                         );
                     """;
@@ -78,7 +80,7 @@ public class MySqlStorage implements Storage {
     }
 
     @Override
-    public CompletableFuture<Player> getPlayer(String playerName) {
+    public CompletableFuture<PlayerData> getPlayer(String playerName) {
         return CompletableFuture.supplyAsync(() -> {
             final String sql = "SELECT * FROM players WHERE player_name = ?";
             try (final Connection conn = dataSource.getConnection();
@@ -86,9 +88,10 @@ public class MySqlStorage implements Storage {
                 ps.setString(1, playerName);
                 try (final ResultSet rs = ps.executeQuery()) {
                     if (rs.next()) {
-                        return new Player(
+                        return new PlayerData(
+                                rs.getInt("id"),
                                 rs.getString("player_name"),
-                                rs.getString("class"),
+                                Skill.valueOf(rs.getString("class").toUpperCase()),
                                 rs.getInt("progress")
                         );
                     }
@@ -101,18 +104,18 @@ public class MySqlStorage implements Storage {
     }
 
     @Override
-    public CompletableFuture<Player> getPlayer(int id) {
+    public CompletableFuture<PlayerData> getPlayer(int id) {
         return null;
     }
 
     @Override
-    public void addPlayer(Player player) {
+    public void addPlayer(PlayerData player) {
         CompletableFuture.runAsync(() -> {
             final String sql = "INSERT INTO players (player_name, class, progress) VALUES (?, ?, ?)";
             try (final Connection conn = dataSource.getConnection();
                  final PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setString(1, player.getPlayerName());
-                ps.setString(2, player.getSkill());
+                ps.setString(2, String.valueOf(player.getSkill()));
                 ps.setInt(3, player.getProgress());
                 ps.executeUpdate();
             } catch (SQLException e) {
@@ -137,12 +140,12 @@ public class MySqlStorage implements Storage {
     }
 
     @Override
-    public void updatePlayer(Player player) {
+    public void updatePlayer(PlayerData player) {
         CompletableFuture.runAsync(() ->{
             final String sql = "UPDATE players SET class = ?, progress = ? WHERE player_name = ?";
             try (final Connection conn = dataSource.getConnection();
                  final PreparedStatement ps = conn.prepareStatement(sql)) {
-                ps.setString(1, player.getSkill());
+                ps.setString(1, String.valueOf(player.getSkill()));
                 ps.setInt(2, player.getProgress());
                 ps.setString(3, player.getPlayerName());
                 ps.executeUpdate();
@@ -179,7 +182,7 @@ public class MySqlStorage implements Storage {
     @Override
     public CompletableFuture<List<Task>> getTasksByPlayer(int playerId) {
         return CompletableFuture.supplyAsync(() -> {
-            final String sql = "SELECT * FROM task WHERE player_id = ?";
+            final String sql = "SELECT * FROM tasks WHERE player_id = ?";
             try(final Connection conn = dataSource.getConnection();
             final PreparedStatement ps = conn.prepareStatement(sql)){
                 ps.setInt(1, playerId);
@@ -233,12 +236,19 @@ public class MySqlStorage implements Storage {
         CompletableFuture.runAsync(() -> {
             final String sql = "INSERT INTO tasks (player_id, task_name, status) VALUES (?, ?, ?)";
             try (final Connection conn = dataSource.getConnection();
-                 final PreparedStatement ps = conn.prepareStatement(sql)) {
-                ps.setString(1, String.valueOf(task.getPlayerId()));
+                 PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);) {
+                ps.setInt(1, task.getPlayerId());
                 ps.setString(2, task.getTaskName());
                 ps.setString(3, task.getStatus().name());
                 ps.executeUpdate();
+                try (ResultSet rs = ps.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        int generatedId = rs.getInt(1);
+                        task.setId(generatedId);
+                    }
+                }
             } catch (SQLException e) {
+                e.printStackTrace();
                 throw new RuntimeException(e);
             }
         }, executorService);
