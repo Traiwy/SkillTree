@@ -2,27 +2,31 @@ package ru.traiwy.skilltree.storage;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import ru.traiwy.skilltree.data.Player;
+import ru.traiwy.skilltree.data.Task;
 import ru.traiwy.skilltree.enums.Status;
 import ru.traiwy.skilltree.manager.ConfigManager;
-import ru.traiwy.skilltree.enums.Skill;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class MySqlStorage implements Storage {
     private HikariDataSource dataSource;
+    private final ExecutorService executorService = Executors.newFixedThreadPool(2);
 
     public MySqlStorage() {
         setupDataSource();
     }
 
     private void setupDataSource() {
-        String url = "jdbc:mysql://" + ConfigManager.MySQL.HOST + ":" +
+        final String url = "jdbc:mysql://" + ConfigManager.MySQL.HOST + ":" +
                 ConfigManager.MySQL.PORT + "/" + ConfigManager.MySQL.DATABASE;
 
-        HikariConfig config = new HikariConfig();
+        final HikariConfig config = new HikariConfig();
         config.setJdbcUrl(url);
         config.setUsername(ConfigManager.MySQL.USER);
         config.setPassword(ConfigManager.MySQL.PASSWORD);
@@ -32,236 +36,280 @@ public class MySqlStorage implements Storage {
         config.setIdleTimeout(600000);
         config.setMaxLifetime(1800000);
 
+
         config.addDataSourceProperty("cachePrepStmts", "true");
         config.addDataSourceProperty("prepStmtCacheSize", "250");
         config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
 
         dataSource = new HikariDataSource(config);
+        initDatabase();
     }
 
-    @Override
-    public void createTable() {
-        String sql = """
-                CREATE TABLE IF NOT EXISTS skilltree (
-                    player_name VARCHAR(36) PRIMARY KEY,
-                    class VARCHAR(20),
-                    task1 VARCHAR(20) DEFAULT 'NOT_STARTED',
-                    task2 VARCHAR(20) DEFAULT 'NOT_STARTED',
-                    task3 VARCHAR(20) DEFAULT 'NOT_STARTED',
-                    task4 VARCHAR(20) DEFAULT 'NOT_STARTED',
-                    task5 VARCHAR(20) DEFAULT 'NOT_STARTED',
-                    task6 VARCHAR(20) DEFAULT 'NOT_STARTED',
-                    task7 VARCHAR(20) DEFAULT 'NOT_STARTED',
-                    task8 VARCHAR(20) DEFAULT 'NOT_STARTED',
-                    task9 VARCHAR(20) DEFAULT 'NOT_STARTED',
-                    progress INT DEFAULT 0
-                );
-                """;
 
-            try (Connection connection = dataSource.getConnection()) {
-                try (PreparedStatement ps = connection.prepareStatement(sql)) {
-                    ps.executeUpdate();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
+    private void initDatabase() {
+        CompletableFuture.runAsync(() -> {
+            String playersSql = """
+                        CREATE TABLE IF NOT EXISTS players (
+                            id INT AUTO_INCREMENT PRIMARY KEY,
+                            player_name VARCHAR(36) UNIQUE NOT NULL,
+                            class VARCHAR(20),
+                            progress INT DEFAULT 0
+                        );
+                    """;
+
+            String tasksSql = """
+                        CREATE TABLE IF NOT EXISTS tasks (
+                            id INT AUTO_INCREMENT PRIMARY KEY,
+                            player_id INT NOT NULL,
+                            task_name VARCHAR(50) NOT NULL,
+                            taskStatus VARCHAR(20) DEFAULT 'NOT_STARTED',
+                            FOREIGN KEY (player_id) REFERENCES players(id) ON DELETE CASCADE
+                        );
+                    """;
+
+            try (Connection conn = dataSource.getConnection();
+                 Statement st = conn.createStatement()) {
+                st.executeUpdate(playersSql);
+                st.executeUpdate(tasksSql);
             } catch (SQLException e) {
-                e.printStackTrace();
+                throw new RuntimeException(e);
             }
-    }
-
-
-    @Override
-    public void setSkill(String name, Skill characterSkill) {
-        try (Connection connection = dataSource.getConnection()) {
-            try (final PreparedStatement ps = connection.prepareStatement("""
-                    INSERT INTO skilltree (player_name, class) VALUES (?, ?)
-                    """)) {
-                ps.setString(1, name);
-                ps.setString(2, characterSkill.name());
-                ps.executeUpdate();
-
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        }, executorService);
     }
 
     @Override
-    public Skill getSkill(String name) {
-        try (Connection connection = dataSource.getConnection()) {
-            try (final PreparedStatement ps = connection.prepareStatement("""
-                    SELECT class FROM skilltree WHERE `player_name` = ?
-                    """)) {
-                ps.setString(1, name);
-
-                try (ResultSet rs = ps.executeQuery()) {
+    public CompletableFuture<Player> getPlayer(String playerName) {
+        return CompletableFuture.supplyAsync(() -> {
+            final String sql = "SELECT * FROM players WHERE player_name = ?";
+            try (final Connection conn = dataSource.getConnection();
+                 final PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, playerName);
+                try (final ResultSet rs = ps.executeQuery()) {
                     if (rs.next()) {
-                        String className = rs.getString("class");
-                        return Skill.valueOf(className);
+                        return new Player(
+                                rs.getString("player_name"),
+                                rs.getString("class"),
+                                rs.getInt("progress")
+                        );
                     }
                 }
             } catch (SQLException e) {
-                e.printStackTrace();
+                throw new RuntimeException(e);
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+            return null;
+        }, executorService);
+    }
+
+    @Override
+    public CompletableFuture<Player> getPlayer(int id) {
         return null;
     }
 
     @Override
-    public void updateTask(String name, int taskId, Status status) {
-        String columnName = "task" + taskId;
-        try (Connection connection = dataSource.getConnection()) {
-            try (final PreparedStatement ps = connection.prepareStatement(
-                    "UPDATE skilltree SET " +
-                            columnName + " = ? " +
-                            "WHERE player_name = ?")) {
-                ;
-                ps.setString(1, status.name());
-                ps.setString(2, name);
+    public void addPlayer(Player player) {
+        CompletableFuture.runAsync(() -> {
+            final String sql = "INSERT INTO players (player_name, class, progress) VALUES (?, ?, ?)";
+            try (final Connection conn = dataSource.getConnection();
+                 final PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, player.getPlayerName());
+                ps.setString(2, player.getSkill());
+                ps.setInt(3, player.getProgress());
                 ps.executeUpdate();
             } catch (SQLException e) {
-                e.printStackTrace();
+                throw new RuntimeException(e);
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        }, executorService);
+
     }
 
     @Override
-    public boolean isTaskCompleted(String name, int taskId) {
-        String sql = "SELECT task" + taskId + " FROM skilltree WHERE player_name = ?";
+    public void removePlayer(int id) {
+        CompletableFuture.runAsync(() -> {
+            final String sql = "DELETE FROM players WHERE id = ?";
+            try (final Connection conn = dataSource.getConnection();
+                 final PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setInt(1, id);
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }, executorService);
+    }
 
-        try (Connection connection = dataSource.getConnection();
-             PreparedStatement ps = connection.prepareStatement(sql)) {
+    @Override
+    public void updatePlayer(Player player) {
+        CompletableFuture.runAsync(() ->{
+            final String sql = "UPDATE players SET class = ?, progress = ? WHERE player_name = ?";
+            try (final Connection conn = dataSource.getConnection();
+                 final PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, player.getSkill());
+                ps.setInt(2, player.getProgress());
+                ps.setString(3, player.getPlayerName());
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }, executorService);
+    }
 
-            ps.setString(1, name);
+    @Override
+    public CompletableFuture<Task> getTask(int id) {
+        return CompletableFuture.supplyAsync(() -> {
+            final String sql = "SELECT * FROM tasks WHERE id = ?";
+            try (final Connection conn = dataSource.getConnection();
+                 final PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setInt(1, id);
+                try (final ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        return new Task(
+                                rs.getInt("id"),
+                                rs.getInt("player_id"),
+                                rs.getString("task_name"),
+                                Status.valueOf(rs.getString("status").toUpperCase())
+                        );
+                    }
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+            return null;
+        }, executorService);
+    }
 
-            try (ResultSet rs = ps.executeQuery()) {
+    @Override
+    public CompletableFuture<List<Task>> getTasksByPlayer(int playerId) {
+        return CompletableFuture.supplyAsync(() -> {
+            final String sql = "SELECT * FROM task WHERE player_id = ?";
+            try(final Connection conn = dataSource.getConnection();
+            final PreparedStatement ps = conn.prepareStatement(sql)){
+                ps.setInt(1, playerId);
+                try(final ResultSet rs = ps.executeQuery()){
+                    List<Task> tasks = new ArrayList<>();
+                    while (rs.next()){
+                        tasks.add(new Task(
+                                rs.getInt("id"),
+                                rs.getInt("player_id"),
+                                rs.getString("task_name"),
+                                Status.valueOf(rs.getString("status").toUpperCase())
+                        ));
+                    }
+                    return tasks;
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        },executorService);
+    }
+
+    @Override
+    public CompletableFuture<List<Task>> getTasksByStatus(int playerId, String status) {
+        return CompletableFuture.supplyAsync(() -> {
+            try(final Connection conn = dataSource.getConnection();
+            final PreparedStatement ps = conn.prepareStatement(
+                    "SELECT * FROM tasks WHERE player_id = ? AND status = ?"
+            )){
+                ps.setInt(1, playerId);
+                ps.setString(2, status.toUpperCase());
+                try(final ResultSet rs = ps.executeQuery()){
+                    List<Task> tasks = new ArrayList<>();
+                    while (rs.next()){
+                        tasks.add(new Task(
+                                rs.getInt("id"),
+                                rs.getInt("player_id"),
+                                rs.getString("task_name"),
+                                Status.valueOf(rs.getString("status").toUpperCase())
+                        ));
+                    }
+                    return tasks;
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }, executorService);
+    }
+
+    @Override
+    public void addTask(Task task) {
+        CompletableFuture.runAsync(() -> {
+            final String sql = "INSERT INTO tasks (player_id, task_name, status) VALUES (?, ?, ?)";
+            try (final Connection conn = dataSource.getConnection();
+                 final PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, String.valueOf(task.getPlayerId()));
+                ps.setString(2, task.getTaskName());
+                ps.setString(3, task.getStatus().name());
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }, executorService);
+    }
+
+    @Override
+    public void removeTask(int id) {
+        CompletableFuture.runAsync(() -> {
+            final String sql = "DELETE FROM tasks WHERE id = ?";
+            try (final Connection conn = dataSource.getConnection();
+                 final PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setInt(1, id);
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }, executorService);
+    }
+
+    @Override
+    public void updateTask(Task task) {
+        CompletableFuture.runAsync(() -> {
+            final String sql = "UPDATE tasks SET task_name = ?, status = ? WHERE id = ?";
+            try (final Connection conn = dataSource.getConnection();
+                 final PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, task.getTaskName());
+                ps.setString(2, task.getStatus().name());
+                ps.setInt(3, task.getId());
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }, executorService);
+    }
+
+    @Override
+    public CompletableFuture<Integer> countTasksByStatus(String status) {
+        return CompletableFuture.supplyAsync(() -> {
+            final String sql = "SELECT COUNT(*) AS count FROM tasks WHERE status = ?";
+            try (final Connection conn = dataSource.getConnection();
+                 final PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, status.toUpperCase());
+                try (final ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        return rs.getInt("count");
+                    }
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+            return 0;
+        }, executorService);
+    }
+
+    @Override
+    public CompletableFuture<Integer> countPlayers() {
+        return CompletableFuture.supplyAsync(() -> {
+            final String sql = "SELECT COUNT(*) AS count FROM players";
+            try (final Connection conn = dataSource.getConnection();
+                 final PreparedStatement ps = conn.prepareStatement(sql);
+                 final ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    String status = rs.getString("task" + taskId);
-                    return "COMPLETED".equals(status);
-                }
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
-
-
-    @Override
-    public boolean isChecked(String name) {
-        try (Connection connection = dataSource.getConnection();
-             PreparedStatement ps = connection.prepareStatement("""
-                     SELECT 1 FROM skilltree WHERE player_name = ?
-                     """)) {
-
-            ps.setString(1, name);
-            try (ResultSet rs = ps.executeQuery()) {
-                return rs.next();
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    @Override
-    public int getCompletedTasksCount(String name) {
-        return 0;
-    }
-
-    @Override
-    public void deleteSkill(String name) {
-        try (Connection connection = dataSource.getConnection()) {
-            try (final PreparedStatement ps = connection.prepareStatement("""
-                    DELETE FROM skilltree WHERE player_name = ?
-                    """)) {
-                ps.setString(1, name);
-                ps.executeUpdate();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    public Status getStatus(String name, int taskId) {
-        String sql = "SELECT task" + taskId + " FROM skilltree WHERE player_name = ?";
-        try (Connection connection = dataSource.getConnection()) {
-            String columnName = "task" + taskId;
-            try (final PreparedStatement ps = connection.prepareStatement(sql)) {
-                ps.setString(1, name);
-
-                try (ResultSet rs = ps.executeQuery()) {
-                    if (rs.next()) {
-                        String statusStr = rs.getString(columnName);
-                        if (statusStr != null) {
-                            return Status.valueOf(statusStr);
-                        }
-                    }
+                    return rs.getInt("count");
                 }
             } catch (SQLException e) {
-                e.printStackTrace();
+                throw new RuntimeException(e);
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    @Override
-    public int getProgress(String name) {
-        String sql = "SELECT progress FROM skilltree WHERE player_name = ?";
-        try (Connection connection = dataSource.getConnection()) {
-            try (final PreparedStatement ps = connection.prepareStatement(sql)) {
-                ps.setString(1, name);
-
-                try (ResultSet rs = ps.executeQuery()) {
-                    if (rs.next()) {
-                        return rs.getInt("progress");
-                    }
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return 0;
-    }
-
-    @Override
-    public void updateProgress(String name, int progress ) {
-
-         String sql = "UPDATE skilltree SET progress = ? WHERE player_name = ?";
-
-        try (Connection connection = dataSource.getConnection()) {
-            try (PreparedStatement ps = connection.prepareStatement(sql)) {
-                ps.setInt(1, progress);
-                ps.setString(2, name);
-
-                ps.executeUpdate();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+            return 0;
+        }, executorService);
     }
 }
-
-
-
-
 
 
 

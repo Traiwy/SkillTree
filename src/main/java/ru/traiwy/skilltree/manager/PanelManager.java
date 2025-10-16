@@ -40,14 +40,14 @@ public class PanelManager {
     }
 
     private ItemStack getTaskPanel(Player player, ConfigManager.GUI.TASK task, int taskId) {
-        Status status = mySqlStorage.getStatus(player.getName(), taskId);
-        if (status == null) {
-            status = Status.NOT_STARTED;
+        Status taskStatus = mySqlStorage.getStatus(player.getName(), taskId);
+        if (taskStatus == null) {
+            taskStatus = Status.NOT_STARTED;
         }
 
         Material panelMaterial;
 
-        switch (status) {
+        switch (taskStatus) {
             case COMPLETED:
                 panelMaterial = Material.GREEN_STAINED_GLASS_PANE;
                 break;

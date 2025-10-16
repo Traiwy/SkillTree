@@ -57,11 +57,11 @@ public class StartCommand implements CommandExecutor {
     }
 
     public void activateNextTask(Player player, int lastTask, int nextTask) {
-        Status lastTaskStatus = mySqlStorage.getStatus(player.getName(), lastTask);
-        Status nextTaskStatus = mySqlStorage.getStatus(player.getName(), nextTask);
+        Status lastTaskTaskStatus = mySqlStorage.getStatus(player.getName(), lastTask);
+        Status nextTaskTaskStatus = mySqlStorage.getStatus(player.getName(), nextTask);
 
 
-        if (lastTaskStatus == Status.COMPLETED && nextTaskStatus == Status.NOT_STARTED) {
+        if (lastTaskTaskStatus == Status.COMPLETED && nextTaskTaskStatus == Status.NOT_STARTED) {
             mySqlStorage.updateTask(player.getName(), nextTask, Status.IN_PROGRESS);
         }
     }

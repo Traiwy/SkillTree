@@ -5,7 +5,6 @@ import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDeathEvent;
-import ru.traiwy.skilltree.enums.Skill;
 import ru.traiwy.skilltree.enums.Status;
 import ru.traiwy.skilltree.storage.MySqlStorage;
 

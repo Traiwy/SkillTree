@@ -28,6 +28,8 @@ dependencies {
     implementation 'com.zaxxer:HikariCP:5.1.0'
 
     implementation 'com.mysql:mysql-connector-j:8.4.0'
+
+    implementation("com.google.code.gson:gson:2.13.2")
 }
 
 def targetJavaVersion = 17
@@ -70,6 +72,8 @@ tasks {
         relocate 'com.mysql', 'ru.traiwy.skilltree.libs.mysql'
 
         configurations = [project.configurations.runtimeClasspath]
+
+
     }
 
     build {
