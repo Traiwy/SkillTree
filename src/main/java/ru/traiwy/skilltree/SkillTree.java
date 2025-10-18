@@ -37,7 +37,7 @@ public final class SkillTree extends JavaPlugin {
                 mySqlStorage,
                 configManager,
                 this);
-        getCommand("skilltree").setExecutor(new AdminCommand(mySqlStorage, choiceMenu));
+        getCommand("skilltree").setExecutor(new AdminCommand(this, mySqlStorage, choiceMenu, warriorMenu, farmerMenuHolder, alchemistMenu));
         getServer().getPluginManager().registerEvents(choiceMenu, this);
         getServer().getPluginManager().registerEvents(new MobKillListener(mySqlStorage), this);
         getServer().getPluginManager().registerEvents(new RaidFinishListener(mySqlStorage), this);

@@ -15,6 +15,7 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitScheduler;
 import ru.traiwy.skilltree.data.PlayerData;
 import ru.traiwy.skilltree.data.Task;
 import ru.traiwy.skilltree.enums.Status;
@@ -78,16 +79,16 @@ public class ChoiceMenu implements InventoryHolder, Listener {
             Skill selectedClass = null;
             switch (item.getType()) {
                 case IRON_SWORD:
-                    player.openInventory(warriorMenu.getInventory());
+                    warriorMenu.openInventory(player);
                     selectedClass = Skill.WARRIOR;
                     break;
                 case WHEAT:
-                    player.openInventory(farmerMenuHolder.getInventory());
+                    farmerMenuHolder.openInventory(player);
                     selectedClass = Skill.FARMER;
                     break;
 
                 case POTION:
-                    player.openInventory(alchemistMenu.getInventory());
+                    alchemistMenu.openInventory(player);
                     selectedClass = Skill.ALCHEMIST;
                     break;
                 default:
@@ -101,17 +102,22 @@ public class ChoiceMenu implements InventoryHolder, Listener {
 
     private void createPlayerWithTask(Player player, Skill skill) {
         PlayerData newPlayer = new PlayerData(player.getName(), skill, 0);
-
         mySqlStorage.addPlayer(newPlayer);
 
-        mySqlStorage.getPlayer(player.getName()).thenAccept(loadedPlayer -> {
-            if (loadedPlayer != null) {
-                ConfigManager.GUI.TASK taskConfig = configManager.getTasks(skill).get(0);
-                String taskName = taskConfig.getName();
-                Task task = new Task(0, loadedPlayer.getId(), taskName, Status.IN_PROGRESS);
-                mySqlStorage.addTask(task);
-            }
+        Bukkit.getAsyncScheduler().runNow(plugin, task -> {
+            mySqlStorage.getPlayer(player.getName()).thenAccept(loadedPlayer -> {
+                if (loadedPlayer != null) {
+                    ConfigManager.GUI.TASK taskConfig = configManager.getTasks(skill).get(0);
+                    String taskName = taskConfig.getName();
+                    Task newTask = new Task(0, loadedPlayer.getId(), taskName, Status.IN_PROGRESS);
+                    mySqlStorage.addTask(newTask);
+                }
+            });
         });
     }
 
+
+
 }
+
+
