@@ -13,8 +13,8 @@ import ru.traiwy.skilltree.enums.Skill;
 public class PlayerData {
     private int id;
     private final String playerName;
-    private final Skill skill;
-    private final int progress;
+    private Skill skill;
+    private int progress;
 
     public PlayerData(String playerName, Skill skill, int progress) {
         this.playerName = playerName;

@@ -2,6 +2,7 @@ package ru.traiwy.skilltree.manager;
 
 
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +16,7 @@ import ru.traiwy.skilltree.enums.Skill;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.bukkit.Bukkit.getLogger;
 
@@ -22,22 +24,21 @@ import static org.bukkit.Bukkit.getLogger;
 @Slf4j
 public class ConfigManager {
     private final JavaPlugin plugin;
-    private FileConfiguration mainConfig;
+    private FileConfiguration challengeConfig;
     private FileConfiguration bdConfig;
 
-    private final List<GUI.TASK> warriorTask = new ArrayList<>();
-    private final List<GUI.TASK> alchemistTask = new ArrayList<>();
-    private final List<GUI.TASK> farmerTask = new ArrayList<>();
+    private final List<Challenge> challenges = new ArrayList<>();
 
-    public ConfigManager(JavaPlugin plugin, FileConfiguration file) {
+    public ConfigManager(JavaPlugin plugin) {
         this.plugin = plugin;
     }
+
 
     public void load(FileConfiguration config){
         try{
             loadMainConfig();
             loadDataBaseConfig();
-            parseGui(mainConfig);
+            parseChallenges();
         } catch (Exception e) {
              throw new IllegalStateException("Ошибка загрузки конфигурации", e);
         }
@@ -45,9 +46,9 @@ public class ConfigManager {
     public void loadMainConfig() {
         plugin.saveDefaultConfig();
         plugin.reloadConfig();
-        this.mainConfig = plugin.getConfig();
+        this.challengeConfig = plugin.getConfig();
 
-        if (mainConfig == null) {
+        if (challengeConfig == null) {
             throw new IllegalStateException("Основной config.yml не загружен!");
         }
     }
@@ -70,38 +71,68 @@ public class ConfigManager {
 
     }
 
+   private void parseChallenges() {
+    List<Map<?, ?>> rawList = challengeConfig.getMapList("challenges");
 
-    public void parseGui(FileConfiguration config) {
-        final ConfigurationSection section = config.getConfigurationSection("gui.task");
-        isSectionIsNull(section);
+    if (rawList == null || rawList.isEmpty()) return;
 
-        final ConfigurationSection warriorSection = section.getConfigurationSection("warrior");
-        isSectionIsNull(warriorSection);
-        parseTasks(warriorSection, warriorTask);
+    for (Map map : rawList) {
+        try {
+            String type = (String) map.get("type");
+            String id = (String) map.get("id");
+            String displayName = (String) map.get("displayName");
 
-        for (GUI.TASK a : warriorTask) {
-            getLogger().info("[Warrior] " + a.getName() + " — " + a.getTask());
+            List<String> goal = (List<String>) map.get("goal");
+
+            Map dataMap = (Map) map.get("data");
+            int current = ((Number) dataMap.get("current")).intValue();
+            int required = ((Number) dataMap.get("required")).intValue();
+
+            Map settings = (Map) map.get("settings");
+            Map metadata = (Map) map.get("metadata");
+
+            Challenge challenge = new Challenge(type, id, goal,
+                    new ChallengeData(current, required), displayName,
+                    settings, metadata);
+
+            challenges.add(challenge);
+        } catch (Exception e) {
+            log.error("Ошибка при парсинге испытания: {}", map, e);
         }
+    }
+}
 
-
-        final ConfigurationSection alchemistSection = section.getConfigurationSection("alchemist");
-        isSectionIsNull(alchemistSection);
-        parseTasks(alchemistSection, alchemistTask);
-        for (GUI.TASK a : alchemistTask) {
-            getLogger().info("[Alchemist] " + a.getName() + " — " + a.getTask());
-        }
-
-
-        final ConfigurationSection farmerSection = section.getConfigurationSection("farmer");
-        isSectionIsNull(farmerSection);
-        parseTasks(farmerSection, farmerTask);
-        for (GUI.TASK a : farmerTask) {
-            getLogger().info("[Farmer] " + a.getName() + " — " + a.getTask());
-        }
-
+    public List<Challenge> getChallenges() {
+        return challenges;
+    }
+    public Challenge getById(String id) {
+        return challenges.stream()
+                .filter(c -> c.getId().equalsIgnoreCase(id))
+                .findFirst()
+                .orElse(null);
     }
 
-    private static void loadMysql(ConfigurationSection sqlSection){
+    @Data
+    @AllArgsConstructor
+    public static class Challenge {
+        private String type;
+        private String id;
+        private List<String> goal;
+        private ChallengeData data;
+        private String displayName;
+        private Map<String, Object> settings;
+        private Map<String, Object> metadata;
+    }
+
+    @Getter
+    @AllArgsConstructor
+    public static class ChallengeData {
+        private int current;
+        private int required;
+    }
+
+
+       private static void loadMysql(ConfigurationSection sqlSection){
         MySQL.HOST = sqlSection.getString("host");
         MySQL.PORT = sqlSection.getInt("port");
         MySQL.USER = sqlSection.getString("user");
@@ -122,51 +153,4 @@ public class ConfigManager {
         public static String PASSWORD;
         public static String DATABASE;
     }
-
-    public static class GUI{
-        @Getter
-        @Setter
-        @AllArgsConstructor
-        public static class TASK{
-            private String name;
-            private String task;
-
-        }
-
-    }
-
-    public static void isSectionIsNull(ConfigurationSection section){
-        if(section == null) getLogger().info("Section is null");
-    }
-
-    public static void parseTasks(ConfigurationSection section, List<GUI.TASK> tasks) {
-
-        for (String taskKey : section.getKeys(false)) {
-            ConfigurationSection taskSection = section.getConfigurationSection(taskKey);
-
-            if (taskSection == null) {
-                getLogger().warning("Task section " + taskKey + " is null");
-                continue;
-            }
-            String name = taskSection.getString( "name");
-            String task = taskSection.getString("task");
-            if (name != null && task != null) {
-                tasks.add(new GUI.TASK(name, task));
-            } else {
-                getLogger().warning("Missing name or task for " + section.getName() + "." + taskKey);
-            }
-        }
-    }
-     public List<GUI.TASK> getTasks(Skill skill) {
-        if (skill == null) return new ArrayList<>();
-
-        return switch (skill.name().toLowerCase()) {
-            case "warrior" -> warriorTask;
-            case "alchemist" -> alchemistTask;
-            case "farmer" -> farmerTask;
-            default -> new ArrayList<>();
-        };
-    }
 }
-
-

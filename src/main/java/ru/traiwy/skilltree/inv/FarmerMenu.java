@@ -41,8 +41,8 @@ public class FarmerMenu implements InventoryHolder, Listener {
 
     public void openInventory(Player player){
         player.openInventory(inventory);
-        panelManager.setPanels(player, Skill.ALCHEMIST, inventory);
-        panelManager.fillPanelSlots(inventory, new ItemStack(Material.BLACK_STAINED_GLASS_PANE));
+        panelManager.setPanels(player, Skill.FARMER, inventory);
+        panelManager.fillPanelSlots(inventory, new ItemStack(Material.GRAY_STAINED_GLASS_PANE));
 
     }
 }

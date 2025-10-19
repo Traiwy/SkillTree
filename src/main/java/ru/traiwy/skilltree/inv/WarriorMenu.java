@@ -25,22 +25,28 @@ public class WarriorMenu implements InventoryHolder, Listener {
     }
 
 
-    @EventHandler
-    public void onClickInventoryPlayer(InventoryClickEvent event) {
-        final Player player = (Player) event.getWhoClicked();
-        final ItemStack item = event.getCurrentItem();
+   @EventHandler
+public void onClickInventoryPlayer(InventoryClickEvent event) {
+       final Player player = (Player) event.getWhoClicked();
+       final Inventory inv = event.getInventory();
+       final ItemStack item = event.getCurrentItem();
 
-        if(inventory.getHolder() ==  this){
-            event.setCancelled(true);
-        }
-        if(item.getType() ==  Material.GREEN_STAINED_GLASS_PANE){
-            player.sendMessage("Вы получили награду");
-        }
-    }
-    public void openInventory(Player player){
+
+       if (inv == null &&
+               inv.getHolder() == null &&
+               !(inv.getHolder() instanceof WarriorMenu) &&
+               (item == null || item.getType() == Material.AIR)) return;
+       event.setCancelled(true);
+
+       if (item.getType() == Material.GREEN_STAINED_GLASS_PANE) {
+           player.sendMessage("Вы получили награду");
+       }
+   }
+
+    public void openInventory(Player player) {
         player.openInventory(inventory);
         panelManager.setPanels(player, Skill.WARRIOR, inventory);
-        panelManager.fillPanelSlots(inventory, new ItemStack(Material.BLACK_STAINED_GLASS_PANE));
+        panelManager.fillPanelSlots(inventory, new ItemStack(Material.GRAY_STAINED_GLASS_PANE));
 
     }
 }

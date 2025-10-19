@@ -25,6 +25,8 @@ public class AlchemistMenu implements InventoryHolder, Listener {
     private void setupInventory(Player player){
         inventory.close();
 
+        
+
         final ItemStack playerHead = new ItemStack(Material.PLAYER_HEAD);
         final ItemStack paper = new ItemStack(Material.PAPER);
 
@@ -42,7 +44,6 @@ public class AlchemistMenu implements InventoryHolder, Listener {
         inventory.setItem(10, playerHead);
         inventory.setItem(11, paper);
 
-        panelManager.fillPanelSlots(inventory, new ItemStack(Material.BLACK_STAINED_GLASS_PANE));
     }
 
     @Override
@@ -65,7 +66,9 @@ public class AlchemistMenu implements InventoryHolder, Listener {
     public void openInventory(Player player){
         setupInventory(player);
         panelManager.setPanels(player, Skill.ALCHEMIST, inventory);
+        panelManager.fillPanelSlots(inventory, new ItemStack(Material.BLACK_STAINED_GLASS_PANE));
         player.openInventory(inventory);
+
 
     }
 

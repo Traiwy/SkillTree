@@ -1,88 +1,357 @@
-gui:
-  task:
-    warrior:
-      task1:
-        name: "Воин"
-        task: "Убить 5 зомби"
-      task2:
-        name: "Лучник"
-        task: "Убить 3 скелетов"
-      task3:
-        name: "Охотник"
-        task: "Убить 2 пауков"
-      task4:
-        name: "Герой деревни"
-        task: "Защитить деревню от рейда"
-      task5:
-        name: "Меткий стрелок"
-        task: "Попасть в цель с расстояния 30 блоков"
-      task6:
-        name: "Покоритель лавы"
-        task: "Выжить после купания в лаве"
-      task7:
-        name: "Охотник на ведьм"
-        task: "Убить ведьму"
-      task8:
-        name: "Исследователь пещер"
-        task: "Найти алмаз на глубине ниже -40"
-      task9:
-        name: "Покоритель бездны"
-        task: "Победить эндер-дракона"
+challenges:
+  # === WARRIOR ===
+  - type: "kill-mob"
+    id: "warrior_task1"
+    goal:
+      - "Убить 5 зомби"
+    data:
+      current: 0
+      required: 5
+    displayName: "Воин"
+    settings:
+      entityType:
+        - ZOMBIE
+    metadata: null
 
-    alchemist:
-      task1:
-        name: "Начинающий алхимик"
-        task: "Сварить зелье исцеления"
-      task2:
-        name: "Опытный алхимик"
-        task: "Сварить зелье силы II"
-      task3:
-        name: "Мастер алхимии"
-        task: "Сварить зелье невидимости"
-      task4:
-        name: "Зельевар"
-        task: "Сварить зелье ночного зрения"
-      task5:
-        name: "Токсиколог"
-        task: "Сварить зелье яда II"
-      task6:
-        name: "Эликсир жизни"
-        task: "Сварить зелье регенерации II"
-      task7:
-        name: "Алхимик-исследователь"
-        task: "Создать зелье с помощью модификатора (например, удлинение или усиление)"
-      task8:
-        name: "Мастер зелий"
-        task: "Сварить все виды зелий в игре"
-      task9:
-        name: "Легендарный алхимик"
-        task: "Сварить зелье с эффектом, которого нет в стандартной игре (например, зелье левитации)"
+  - type: "kill-mob"
+    id: "warrior_task2"
+    goal:
+      - "Убить 3 скелетов"
+    data:
+      current: 0
+      required: 3
+    displayName: "Лучник"
+    settings:
+      entityType:
+        - SKELETON
+    metadata: null
 
-    farmer:
-      task1:
-        name: "Начинающий фермер"
-        task: "Посадить 10 пшеницы"
-      task2:
-        name: "Опытный фермер"
-        task: "Собрать 20 моркови"
-      task3:
-        name: "Мастер сельского хозяйства"
-        task: "Посадить и собрать 15 картофеля"
-      task4:
-        name: "Животновод"
-        task: "Вырастить 5 коров"
-      task5:
-        name: "Птицевод"
-        task: "Вырастить 10 куриц"
-      task6:
-        name: "Овцевод"
-        task: "Вырастить 7 овец и постричь их"
-      task7:
-        name: "Фермер-исследователь"
-        task: "Посадить и собрать все виды культур в игре"
-      task8:
-        name: "Мастер фермы"
-        task: "Создать автоматическую ферму (например, с помощью редстоуна)"
-      task9:
-        name: "Легендарный фермер"
-        task: "Вырастить и собрать редкие культуры (например, арбуз или тыкву)"
+  - type: "kill-mob"
+    id: "warrior_task3"
+    goal:
+      - "Убить 2 пауков"
+    data:
+      current: 0
+      required: 2
+    displayName: "Охотник"
+    settings:
+      entityType:
+        - SPIDER
+    metadata: null
+
+  - type: "event"
+    id: "warrior_task4"
+    goal:
+      - "Защитить деревню от рейда"
+    data:
+      current: 0
+      required: 1
+    displayName: "Герой деревни"
+    settings:
+      eventType:
+        - RAID_WIN
+    metadata: null
+
+  - type: "bow-hit"
+    id: "warrior_task5"
+    goal:
+      - "Попасть в цель с расстояния 30 блоков"
+    data:
+      current: 0
+      required: 1
+    displayName: "Меткий стрелок"
+    settings:
+      distance: 30
+    metadata: null
+
+  - type: "survive"
+    id: "warrior_task6"
+    goal:
+      - "Выжить после купания в лаве"
+    data:
+      current: 0
+      required: 1
+    displayName: "Покоритель лавы"
+    settings:
+      condition:
+        - LAVA_SURVIVE
+    metadata: null
+
+  - type: "kill-mob"
+    id: "warrior_task7"
+    goal:
+      - "Убить ведьму"
+    data:
+      current: 0
+      required: 1
+    displayName: "Охотник на ведьм"
+    settings:
+      entityType:
+        - WITCH
+    metadata: null
+
+  - type: "find-item"
+    id: "warrior_task8"
+    goal:
+      - "Найти алмаз на глубине ниже 20 высоты"
+    data:
+      current: 0
+      required: 1
+    displayName: "Исследователь пещер"
+    settings:
+      item:
+        - DIAMOND
+      yLevel: 20
+    metadata: null
+
+  - type: "kill-boss"
+    id: "warrior_task9"
+    goal:
+      - "Победить эндер-дракона"
+    data:
+      current: 0
+      required: 1
+    displayName: "Покоритель бездны"
+    settings:
+      entityType:
+        - ENDER_DRAGON
+    metadata: null
+
+  # === ALCHEMIST ===
+  - type: "brew-potion"
+    id: "alchemist_task1"
+    goal:
+      - "Сварить зелье исцеления"
+    data:
+      current: 0
+      required: 1
+    displayName: "Начинающий алхимик"
+    settings:
+      potionType:
+        - HEALING
+    metadata: null
+
+  - type: "brew-potion"
+    id: "alchemist_task2"
+    goal:
+      - "Сварить зелье силы II"
+    data:
+      current: 0
+      required: 1
+    displayName: "Опытный алхимик"
+    settings:
+      potionType:
+        - STRENGTH
+      level: 2
+    metadata: null
+
+  - type: "brew-potion"
+    id: "alchemist_task3"
+    goal:
+      - "Сварить зелье невидимости"
+    data:
+      current: 0
+      required: 1
+    displayName: "Мастер алхимии"
+    settings:
+      potionType:
+        - INVISIBILITY
+    metadata: null
+
+  - type: "brew-potion"
+    id: "alchemist_task4"
+    goal:
+      - "Сварить зелье ночного зрения"
+    data:
+      current: 0
+      required: 1
+    displayName: "Зельевар"
+    settings:
+      potionType:
+        - NIGHT_VISION
+    metadata: null
+
+  - type: "brew-potion"
+    id: "alchemist_task5"
+    goal:
+      - "Сварить зелье яда II"
+    data:
+      current: 0
+      required: 1
+    displayName: "Токсиколог"
+    settings:
+      potionType:
+        - POISON
+      level: 2
+    metadata: null
+
+  - type: "brew-potion"
+    id: "alchemist_task6"
+    goal:
+      - "Сварить зелье регенерации II"
+    data:
+      current: 0
+      required: 1
+    displayName: "Эликсир жизни"
+    settings:
+      potionType:
+        - REGENERATION
+      level: 2
+    metadata: null
+
+  - type: "brew-modified-potion"
+    id: "alchemist_task7"
+    goal:
+      - "Создать зелье с помощью модификатора (например, удлинение или усиление)"
+    data:
+      current: 0
+      required: 1
+    displayName: "Алхимик-исследователь"
+    settings:
+      modifiers:
+        - LONG
+        - STRONG
+    metadata: null
+
+  - type: "brew-all-potions"
+    id: "alchemist_task8"
+    goal:
+      - "Сварить все виды зелий в игре"
+    data:
+      current: 0
+      required: 1
+    displayName: "Мастер зелий"
+    settings: {}
+    metadata: null
+
+  - type: "brew-custom-potion"
+    id: "alchemist_task9"
+    goal:
+      - "Сварить зелье с эффектом, которого нет в стандартной игре (например, зелье левитации)"
+    data:
+      current: 0
+      required: 1
+    displayName: "Легендарный алхимик"
+    settings:
+      potionEffect:
+        - LEVITATION
+    metadata: null
+
+  # === FARMER ===
+  - type: "plant-crop"
+    id: "farmer_task1"
+    goal:
+      - "Посадить 10 пшеницы"
+    data:
+      current: 0
+      required: 10
+    displayName: "Начинающий фермер"
+    settings:
+      crop:
+        - WHEAT
+    metadata: null
+
+  - type: "harvest-crop"
+    id: "farmer_task2"
+    goal:
+      - "Собрать 20 моркови"
+    data:
+      current: 0
+      required: 20
+    displayName: "Опытный фермер"
+    settings:
+      crop:
+        - CARROT
+    metadata: null
+
+  - type: "plant-harvest"
+    id: "farmer_task3"
+    goal:
+      - "Посадить и собрать 15 картофеля"
+    data:
+      current: 0
+      required: 15
+    displayName: "Мастер сельского хозяйства"
+    settings:
+      crop:
+        - POTATO
+    metadata: null
+
+  - type: "breed-animals"
+    id: "farmer_task4"
+    goal:
+      - "Вырастить 5 коров"
+    data:
+      current: 0
+      required: 5
+    displayName: "Животновод"
+    settings:
+      animal:
+        - COW
+    metadata: null
+
+  - type: "breed-animals"
+    id: "farmer_task5"
+    goal:
+      - "Вырастить 10 куриц"
+    data:
+      current: 0
+      required: 10
+    displayName: "Птицевод"
+    settings:
+      animal:
+        - CHICKEN
+    metadata: null
+
+  - type: "breed-animals"
+    id: "farmer_task6"
+    goal:
+      - "Вырастить 7 овец и постричь их"
+    data:
+      current: 0
+      required: 7
+    displayName: "Овцевод"
+    settings:
+      animal:
+        - SHEEP
+      action:
+        - SHEAR
+    metadata: null
+
+  - type: "plant-all-crops"
+    id: "farmer_task7"
+    goal:
+      - "Посадить и собрать все виды культур в игре"
+    data:
+      current: 0
+      required: 1
+    displayName: "Фермер-исследователь"
+    settings: {}
+    metadata: null
+
+  - type: "build-farm"
+    id: "farmer_task8"
+    goal:
+      - "Создать автоматическую ферму (например, с помощью редстоуна)"
+    data:
+      current: 0
+      required: 1
+    displayName: "Мастер фермы"
+    settings:
+      type:
+        - AUTOMATIC
+    metadata: null
+
+  - type: "grow-rare-crops"
+    id: "farmer_task9"
+    goal:
+      - "Вырастить и собрать редкие культуры (например, арбуз или тыкву)"
+    data:
+      current: 0
+      required: 1
+    displayName: "Легендарный фермер"
+    settings:
+      crop:
+        - MELON
+        - PUMPKIN
+    metadata: null

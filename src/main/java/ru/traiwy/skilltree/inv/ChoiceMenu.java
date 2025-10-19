@@ -9,23 +9,18 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.raid.RaidFinishEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitScheduler;
 import ru.traiwy.skilltree.data.PlayerData;
-import ru.traiwy.skilltree.data.Task;
-import ru.traiwy.skilltree.enums.Status;
 import ru.traiwy.skilltree.manager.ConfigManager;
 import ru.traiwy.skilltree.storage.MySqlStorage;
 import ru.traiwy.skilltree.util.ItemMetaUtils;
 import ru.traiwy.skilltree.enums.Skill;
 
 import java.util.Arrays;
-import java.util.concurrent.CompletableFuture;
 
 
 @AllArgsConstructor
@@ -38,6 +33,7 @@ public class ChoiceMenu implements InventoryHolder, Listener {
     private MySqlStorage mySqlStorage;
     private final ConfigManager configManager;
     private final JavaPlugin plugin;
+
 
 
     @Override
@@ -106,12 +102,7 @@ public class ChoiceMenu implements InventoryHolder, Listener {
 
         Bukkit.getAsyncScheduler().runNow(plugin, task -> {
             mySqlStorage.getPlayer(player.getName()).thenAccept(loadedPlayer -> {
-                if (loadedPlayer != null) {
-                    ConfigManager.GUI.TASK taskConfig = configManager.getTasks(skill).get(0);
-                    String taskName = taskConfig.getName();
-                    Task newTask = new Task(0, loadedPlayer.getId(), taskName, Status.IN_PROGRESS);
-                    mySqlStorage.addTask(newTask);
-                }
+                //taskManager.updateNextTask(player, Skill.WARRIOR, 0);
             });
         });
     }

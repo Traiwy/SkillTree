@@ -108,6 +108,7 @@ public class MySqlStorage implements Storage {
         return null;
     }
 
+
     @Override
     public void addPlayer(PlayerData player) {
         CompletableFuture.runAsync(() -> {
@@ -205,14 +206,14 @@ public class MySqlStorage implements Storage {
     }
 
     @Override
-    public CompletableFuture<List<Task>> getTasksByStatus(int playerId, String status) {
+    public CompletableFuture<List<Task>> getTasksByStatus(int playerId, Status status) {
         return CompletableFuture.supplyAsync(() -> {
             try(final Connection conn = dataSource.getConnection();
             final PreparedStatement ps = conn.prepareStatement(
                     "SELECT * FROM tasks WHERE player_id = ? AND status = ?"
             )){
                 ps.setInt(1, playerId);
-                ps.setString(2, status.toUpperCase());
+                ps.setString(2, status.name());
                 try(final ResultSet rs = ps.executeQuery()){
                     List<Task> tasks = new ArrayList<>();
                     while (rs.next()){
