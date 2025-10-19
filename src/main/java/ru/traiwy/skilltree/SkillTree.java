@@ -1,9 +1,9 @@
 package ru.traiwy.skilltree;
 
 import ru.traiwy.skilltree.command.AdminCommand;
+import ru.traiwy.skilltree.event.BlocksBreakEvent;
 import ru.traiwy.skilltree.event.MobKillEvent;
 import ru.traiwy.skilltree.event.PlayersJoinEvent;
-import ru.traiwy.skilltree.event.RaidFinishListener;
 import ru.traiwy.skilltree.inv.AlchemistMenu;
 import ru.traiwy.skilltree.inv.ChoiceMenu;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -42,7 +42,7 @@ public final class SkillTree extends JavaPlugin {
         getCommand("skilltree").setExecutor(new AdminCommand(this, mySqlStorage, choiceMenu, warriorMenu, farmerMenuHolder, alchemistMenu));
         getServer().getPluginManager().registerEvents(choiceMenu, this);
         getServer().getPluginManager().registerEvents(new MobKillEvent(mySqlStorage, configManager, challengeManager), this);
-        getServer().getPluginManager().registerEvents(new RaidFinishListener(mySqlStorage), this);
+        getServer().getPluginManager().registerEvents(new BlocksBreakEvent(challengeManager, mySqlStorage, this), this);
         getServer().getPluginManager().registerEvents(new PlayersJoinEvent(mySqlStorage), this);
 
     }

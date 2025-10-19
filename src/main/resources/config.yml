@@ -42,18 +42,26 @@ challenges:
         - SPIDER
     metadata: null
 
-  - type: "event"
+  - type: "break-sword-on-wood"
     id: "warrior_task4"
     goal:
-      - "Защитить деревню от рейда"
+      - "Сломай деревянный меч об дуб"
     data:
       current: 0
       required: 1
-    displayName: "Герой деревни"
+    displayName: "Тренировка перед бурей"
     nextChallengeId: "warrior_task5"
     settings:
-      eventType:
-        - RAID_WIN
+      item:
+        - WOODEN_SWORD
+      block:
+        - OAK_LOG
+        - SPRUCE_LOG
+        - BIRCH_LOG
+        - JUNGLE_LOG
+        - DARK_OAK_LOG
+        - CHERRY_LOG
+        - ACACIA_LOG
     metadata: null
 
   - type: "bow-hit"

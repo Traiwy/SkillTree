@@ -22,10 +22,10 @@ public class MobKillEvent implements Listener {
 
     @EventHandler
     public void onEntityDeath(EntityDeathEvent event) {
-        Player killer = event.getEntity().getKiller();
+        final Player killer = event.getEntity().getKiller();
         if (killer == null) return;
 
-        String mobType = getMobType(event.getEntity());
+        final String mobType = getMobType(event.getEntity());
 
         mySqlStorage.getPlayer(killer.getName()).thenAccept(playerData -> {
             if (playerData == null) return;
@@ -41,13 +41,13 @@ public class MobKillEvent implements Listener {
     private void processTask(Task task, String mobType) {
         if (task.getStatus() == Status.COMPLETED) return;
 
-        ConfigManager.Challenge challenge = challengeManager.getChallengeById(task.getChallengeId());
+        final ConfigManager.Challenge challenge = challengeManager.getChallengeById(task.getChallengeId());
         if (challenge == null || !"kill-mob".equals(challenge.getType())) return;
 
-        Object rawEntities = challenge.getSettings().get("entityType");
+        final Object rawEntities = challenge.getSettings().get("entityType");
         if (!(rawEntities instanceof List<?> targetMobs)) return;
 
-        String mobTypeUpper = mobType.toUpperCase();
+        final String mobTypeUpper = mobType.toUpperCase();
         for (Object obj : targetMobs) {
             if (!(obj instanceof String entityName)) continue;
 
@@ -61,14 +61,15 @@ public class MobKillEvent implements Listener {
 
                 if (newProgress >= challenge.getData().getRequired()) {
                     task.setStatus(Status.COMPLETED);
+
                     mySqlStorage.updateTask(task);
 
-                    String nextId = challenge.getNextChallengeId();
+                    final String nextId = challenge.getNextChallengeId();
                     System.out.println(nextId);
                     if (nextId != null) {
-                        ConfigManager.Challenge nextChallenge = challengeManager.getChallengeById(nextId);
+                        final ConfigManager.Challenge nextChallenge = challengeManager.getChallengeById(nextId);
                         if (nextChallenge != null) {
-                            Task nextTask = new Task(
+                            final Task nextTask = new Task(
                                     0,
                                     task.getPlayerId(),
                                     nextChallenge.getDisplayName(),
