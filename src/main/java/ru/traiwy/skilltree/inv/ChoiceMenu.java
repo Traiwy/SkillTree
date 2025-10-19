@@ -1,6 +1,6 @@
 package ru.traiwy.skilltree.inv;
 
-import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -13,8 +13,10 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.plugin.java.JavaPlugin;
 import ru.traiwy.skilltree.data.PlayerData;
+import ru.traiwy.skilltree.data.Task;
+import ru.traiwy.skilltree.enums.Status;
+import ru.traiwy.skilltree.manager.ChallengeManager;
 import ru.traiwy.skilltree.manager.ConfigManager;
 import ru.traiwy.skilltree.storage.MySqlStorage;
 import ru.traiwy.skilltree.util.ItemMetaUtils;
@@ -23,23 +25,32 @@ import ru.traiwy.skilltree.enums.Skill;
 import java.util.Arrays;
 
 
-@AllArgsConstructor
 public class ChoiceMenu implements InventoryHolder, Listener {
     final Inventory inventory = Bukkit.createInventory(this, 27, ChatColor.DARK_BLUE + "Выберите класс");
 
-    private WarriorMenu warriorMenu;
-    private FarmerMenu farmerMenuHolder;
-    private AlchemistMenu alchemistMenu;
-    private MySqlStorage mySqlStorage;
-    private final ConfigManager configManager;
-    private final JavaPlugin plugin;
+    private final WarriorMenu warriorMenu;
+    private final FarmerMenu farmerMenuHolder;
+    private final AlchemistMenu alchemistMenu;
+    private final MySqlStorage mySqlStorage;
+    private final ChallengeManager challengeManager;
 
+    public ChoiceMenu(WarriorMenu warriorMenu, FarmerMenu farmerMenuHolder, AlchemistMenu alchemistMenu, MySqlStorage mySqlStorage, ChallengeManager challengeManager) {
+        this.warriorMenu = warriorMenu;
+        this.farmerMenuHolder = farmerMenuHolder;
+        this.alchemistMenu = alchemistMenu;
+        this.mySqlStorage = mySqlStorage;
+        this.challengeManager = challengeManager;
+
+        setupInventory();
+    }
 
 
     @Override
     public Inventory getInventory() {
+        return inventory;
+    }
 
-
+    public void setupInventory(){
         final ItemStack filler = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
         ItemMeta fillerMeta = filler.getItemMeta();
         filler.setItemMeta(fillerMeta);
@@ -60,7 +71,10 @@ public class ChoiceMenu implements InventoryHolder, Listener {
         inventory.setItem(13, headFarmer);
         inventory.setItem(15, headAlchemist);
 
-        return inventory;
+    }
+
+    public void openInventory(Player player){
+        player.openInventory(inventory);
     }
 
     @EventHandler
@@ -72,43 +86,55 @@ public class ChoiceMenu implements InventoryHolder, Listener {
 
         if (inv != null && item != null && inv.getHolder() instanceof ChoiceMenu) {
             event.setCancelled(true);
-            Skill selectedClass = null;
-            switch (item.getType()) {
-                case IRON_SWORD:
-                    warriorMenu.openInventory(player);
-                    selectedClass = Skill.WARRIOR;
-                    break;
-                case WHEAT:
-                    farmerMenuHolder.openInventory(player);
-                    selectedClass = Skill.FARMER;
-                    break;
 
-                case POTION:
+            switch (item.getType()) {
+                case IRON_SWORD -> {
+                    giveFirstChallengeToPlayer(player, "warrior", Skill.WARRIOR);
+                    mySqlStorage.updatePlayer(new PlayerData(player.getName(), Skill.WARRIOR, 0));
+                    warriorMenu.openInventory(player);
+                }
+                case WHEAT -> {
+                    giveFirstChallengeToPlayer(player, "farmer", Skill.FARMER);
+                    mySqlStorage.updatePlayer(new PlayerData(player.getName(), Skill.FARMER, 0));
+                    farmerMenuHolder.openInventory(player);
+                }
+                case POTION -> {
+                    giveFirstChallengeToPlayer(player, "alchemist", Skill.ALCHEMIST);
+                    mySqlStorage.updatePlayer(new PlayerData(player.getName(), Skill.ALCHEMIST, 0));
                     alchemistMenu.openInventory(player);
-                    selectedClass = Skill.ALCHEMIST;
-                    break;
-                default:
-                    player.sendMessage("Выберите меню достижений");
-            }
-            if (selectedClass != null) {
-                createPlayerWithTask(player, selectedClass);
+                }
+                default -> player.sendMessage("Выберите меню достижений");
             }
         }
     }
 
-    private void createPlayerWithTask(Player player, Skill skill) {
-        PlayerData newPlayer = new PlayerData(player.getName(), skill, 0);
-        mySqlStorage.addPlayer(newPlayer);
-
-        Bukkit.getAsyncScheduler().runNow(plugin, task -> {
-            mySqlStorage.getPlayer(player.getName()).thenAccept(loadedPlayer -> {
-                //taskManager.updateNextTask(player, Skill.WARRIOR, 0);
-            });
+    private void giveFirstChallengeToPlayer(Player player, String classPrefix, Skill skill) {
+        mySqlStorage.getPlayer(player.getName()).thenAccept(playerData -> {
+            if (playerData == null) {
+                PlayerData newPlayer = new PlayerData(player.getName(), skill, 0);
+                mySqlStorage.addPlayer(newPlayer);
+                mySqlStorage.getPlayer(player.getName()).thenAccept(addedPlayer -> {
+                    if (addedPlayer != null) {
+                        giveTask(addedPlayer, classPrefix);
+                    }
+                });
+            } else {
+                giveTask(playerData, classPrefix);
+            }
         });
     }
 
+    private void giveTask(PlayerData playerData, String classPrefix) {
+        ConfigManager.Challenge challenge = challengeManager.getFirstChallengeForClass(classPrefix);
+        if (challenge == null) {
+            System.out.println("challenge == null");
+            return;
+        }
 
-
+        Task task = new Task(0, playerData.getId(), challenge.getDisplayName(), challenge.getId(), Status.IN_PROGRESS, 0);
+        mySqlStorage.addTask(task);
+    }
 }
+
 
 

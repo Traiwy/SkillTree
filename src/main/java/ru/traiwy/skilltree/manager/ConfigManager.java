@@ -4,21 +4,16 @@ package ru.traiwy.skilltree.manager;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
-import ru.traiwy.skilltree.enums.Skill;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import static org.bukkit.Bukkit.getLogger;
 
 
 @Slf4j
@@ -82,6 +77,8 @@ public class ConfigManager {
             String id = (String) map.get("id");
             String displayName = (String) map.get("displayName");
 
+            String nextChallengeId = (String) map.get("nextChallengeId");
+
             List<String> goal = (List<String>) map.get("goal");
 
             Map dataMap = (Map) map.get("data");
@@ -92,7 +89,7 @@ public class ConfigManager {
             Map metadata = (Map) map.get("metadata");
 
             Challenge challenge = new Challenge(type, id, goal,
-                    new ChallengeData(current, required), displayName,
+                    new ChallengeData(current, required), displayName, nextChallengeId,
                     settings, metadata);
 
             challenges.add(challenge);
@@ -120,6 +117,7 @@ public class ConfigManager {
         private List<String> goal;
         private ChallengeData data;
         private String displayName;
+        private String nextChallengeId;
         private Map<String, Object> settings;
         private Map<String, Object> metadata;
     }

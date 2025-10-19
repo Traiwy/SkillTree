@@ -132,26 +132,21 @@ public class PanelManager {
     }
 
     public void initializeSkillTasks() {
-        List<String> allIds = challengeManager.getAllId();
+        List<String> allIds = challengeManager.getAllId(); // получаем все ID челленджей
 
         if (allIds == null || allIds.isEmpty()) {
-            System.out.println("§e[SkillTree] Не найдено ни одного ID челленджа. Проверь, загружен ли конфиг.");
+            System.out.println("§eНе найдено ни одного ID челленджа. Проверь, загружен ли конфиг.");
             return;
         }
 
-        List<String> idCh = challengeManager.getAllId();
-        for(String idChel : idCh){
-            System.out.println("id:" + idChel);
-        }
         for (String id : allIds) {
+            System.out.println("id: " + id);
             if (getStartNameTask(id, "warrior")) addTaskToSkill(Skill.WARRIOR, id);
             if (getStartNameTask(id, "alchemist")) addTaskToSkill(Skill.ALCHEMIST, id);
             if (getStartNameTask(id, "farmer")) addTaskToSkill(Skill.FARMER, id);
         }
 
-
-
-        System.out.println("§a[SkillTree] Загружено " + allIds.size() + " челленджей.");
+        System.out.println("§aЗагружено " + allIds.size() + " челленджей.");
     }
 
     private boolean getStartNameTask(String id, String prefix) {

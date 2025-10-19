@@ -1,52 +1,78 @@
 package ru.traiwy.skilltree.manager;
 
 
-import lombok.AllArgsConstructor;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
-@AllArgsConstructor
 public class ChallengeManager {
+
     private final ConfigManager configManager;
+
+    public ChallengeManager(ConfigManager configManager) {
+        this.configManager = configManager;
+    }
+
 
     public List<ConfigManager.Challenge> getAllChallenges() {
         return configManager.getChallenges();
     }
 
-    public ConfigManager.Challenge getChallengesById(String id) {
+
+    public ConfigManager.Challenge getChallengeById(String id) {
         return configManager.getById(id);
     }
 
-    public String getType(String id) {
-        ConfigManager.Challenge challenge = getChallengesById(id);
-        return (challenge != null) ? challenge.getType() : null;
+
+    public ConfigManager.Challenge getFirstChallengeForClass(String classPrefix) {
+        for (ConfigManager.Challenge challenge : getAllChallenges()) {
+            if (challenge.getId().startsWith(classPrefix)) {
+                return challenge;
+            }
+        }
+        return null;
     }
 
-    public List<String> getGoal(String id) {
-        ConfigManager.Challenge challenge = getChallengesById(id);
-        return (challenge != null) ? challenge.getGoal() : null;
+    public ConfigManager.Challenge getNextChallenge(String currentChallengeId) {
+        ConfigManager.Challenge current = getChallengeById(currentChallengeId);
+        if (current == null || current.getNextChallengeId() == null) return null;
+        return getChallengeById(current.getNextChallengeId());
     }
 
-    public ConfigManager.ChallengeData getDataById(String id) {
-        ConfigManager.Challenge challenge = getChallengesById(id);
-        return (challenge != null) ? challenge.getData() : null;
+    public List<ConfigManager.Challenge> getChallengesByType(String type) {
+        return getAllChallenges().stream()
+                .filter(challenge -> type.equalsIgnoreCase(challenge.getType()))
+                .collect(Collectors.toList());
     }
 
-    public String getDisplayName(String id) {
-        ConfigManager.Challenge challenge = getChallengesById(id);
-        return (challenge != null) ? challenge.getDisplayName() : null;
-    }
 
-    public Map<String, Object> getSettingsById(String id) {
-        ConfigManager.Challenge challenge = getChallengesById(id);
+    public Map<String, Object> getSettings(String id) {
+        ConfigManager.Challenge challenge = getChallengeById(id);
         return (challenge != null) ? challenge.getSettings() : null;
     }
 
-    public Map<String, Object> getMetaDataById(String id) {
-        ConfigManager.Challenge challenge = getChallengesById(id);
+
+    public Map<String, Object> getMetadata(String id) {
+        ConfigManager.Challenge challenge = getChallengeById(id);
         return (challenge != null) ? challenge.getMetadata() : null;
+    }
+
+
+    public ConfigManager.ChallengeData getData(String id) {
+        ConfigManager.Challenge challenge = getChallengeById(id);
+        return (challenge != null) ? challenge.getData() : null;
+    }
+
+
+    public String getDisplayName(String id) {
+        ConfigManager.Challenge challenge = getChallengeById(id);
+        return (challenge != null) ? challenge.getDisplayName() : null;
+    }
+
+    public List<String> getGoal(String id) {
+        ConfigManager.Challenge challenge = getChallengeById(id);
+        return (challenge != null) ? challenge.getGoal() : null;
     }
 
     public List<String> getAllId() {
@@ -54,14 +80,13 @@ public class ChallengeManager {
         List<ConfigManager.Challenge> challenges = configManager.getChallenges();
 
         if (challenges == null || challenges.isEmpty()) {
-            System.out.println("§cНет загруженных челленджей из конфига!");
+            System.out.println("§cНет загруженных челленджей!");
             return ids;
         }
 
         for (ConfigManager.Challenge challenge : challenges) {
-            String id = challenge.getId();
-            if (id != null && !id.isEmpty()) {
-                ids.add(id);
+            if (challenge.getId() != null && !challenge.getId().isEmpty()) {
+                ids.add(challenge.getId());
             }
         }
 

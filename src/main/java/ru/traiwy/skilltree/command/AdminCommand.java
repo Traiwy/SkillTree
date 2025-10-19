@@ -79,6 +79,7 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
                         case WARRIOR -> warriorMenu.openInventory(p);
                         case FARMER -> farmerMenu.openInventory(p);
                         case ALCHEMIST -> alchemistMenu.openInventory(p);
+                        case SOME_DEFAULT -> choiceMenu.openInventory(p);
                         default -> p.sendMessage("Некорректно выбран класс.");
                     }
                 }, null);

@@ -15,7 +15,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-
 public class MySqlStorage implements Storage {
     private HikariDataSource dataSource;
     private final ExecutorService executorService = Executors.newFixedThreadPool(2);
@@ -38,7 +37,6 @@ public class MySqlStorage implements Storage {
         config.setIdleTimeout(600000);
         config.setMaxLifetime(1800000);
 
-
         config.addDataSourceProperty("cachePrepStmts", "true");
         config.addDataSourceProperty("prepStmtCacheSize", "250");
         config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
@@ -46,7 +44,6 @@ public class MySqlStorage implements Storage {
         dataSource = new HikariDataSource(config);
         initDatabase();
     }
-
 
     public void initDatabase() {
         CompletableFuture.runAsync(() -> {
@@ -64,7 +61,9 @@ public class MySqlStorage implements Storage {
                             id INT AUTO_INCREMENT PRIMARY KEY,
                             player_id INT NOT NULL,
                             task_name VARCHAR(255) NOT NULL,
+                            challenge_id VARCHAR(255) NOT NULL,
                             status VARCHAR(20) DEFAULT 'NOT_STARTED',
+                            progress INT DEFAULT 0,
                             FOREIGN KEY (player_id) REFERENCES players(id) ON DELETE CASCADE
                         );
                     """;
@@ -105,9 +104,27 @@ public class MySqlStorage implements Storage {
 
     @Override
     public CompletableFuture<PlayerData> getPlayer(int id) {
-        return null;
+        return CompletableFuture.supplyAsync(() -> {
+            final String sql = "SELECT * FROM players WHERE id = ?";
+            try (Connection conn = dataSource.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setInt(1, id);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        return new PlayerData(
+                                rs.getInt("id"),
+                                rs.getString("player_name"),
+                                Skill.valueOf(rs.getString("class").toUpperCase()),
+                                rs.getInt("progress")
+                        );
+                    }
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+            return null;
+        }, executorService);
     }
-
 
     @Override
     public void addPlayer(PlayerData player) {
@@ -116,14 +133,13 @@ public class MySqlStorage implements Storage {
             try (final Connection conn = dataSource.getConnection();
                  final PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setString(1, player.getPlayerName());
-                ps.setString(2, String.valueOf(player.getSkill()));
+                ps.setString(2, player.getSkill().name());
                 ps.setInt(3, player.getProgress());
                 ps.executeUpdate();
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
         }, executorService);
-
     }
 
     @Override
@@ -142,11 +158,11 @@ public class MySqlStorage implements Storage {
 
     @Override
     public void updatePlayer(PlayerData player) {
-        CompletableFuture.runAsync(() ->{
+        CompletableFuture.runAsync(() -> {
             final String sql = "UPDATE players SET class = ?, progress = ? WHERE player_name = ?";
             try (final Connection conn = dataSource.getConnection();
                  final PreparedStatement ps = conn.prepareStatement(sql)) {
-                ps.setString(1, String.valueOf(player.getSkill()));
+                ps.setString(1, player.getSkill().name());
                 ps.setInt(2, player.getProgress());
                 ps.setString(3, player.getPlayerName());
                 ps.executeUpdate();
@@ -160,16 +176,18 @@ public class MySqlStorage implements Storage {
     public CompletableFuture<Task> getTask(int id) {
         return CompletableFuture.supplyAsync(() -> {
             final String sql = "SELECT * FROM tasks WHERE id = ?";
-            try (final Connection conn = dataSource.getConnection();
-                 final PreparedStatement ps = conn.prepareStatement(sql)) {
+            try (Connection conn = dataSource.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setInt(1, id);
-                try (final ResultSet rs = ps.executeQuery()) {
+                try (ResultSet rs = ps.executeQuery()) {
                     if (rs.next()) {
                         return new Task(
                                 rs.getInt("id"),
                                 rs.getInt("player_id"),
                                 rs.getString("task_name"),
-                                Status.valueOf(rs.getString("status").toUpperCase())
+                                rs.getString("challenge_id"),
+                                Status.valueOf(rs.getString("status").toUpperCase()),
+                                rs.getInt("progress")
                         );
                     }
                 }
@@ -184,17 +202,19 @@ public class MySqlStorage implements Storage {
     public CompletableFuture<List<Task>> getTasksByPlayer(int playerId) {
         return CompletableFuture.supplyAsync(() -> {
             final String sql = "SELECT * FROM tasks WHERE player_id = ?";
-            try(final Connection conn = dataSource.getConnection();
-            final PreparedStatement ps = conn.prepareStatement(sql)){
+            try (Connection conn = dataSource.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setInt(1, playerId);
-                try(final ResultSet rs = ps.executeQuery()){
+                try (ResultSet rs = ps.executeQuery()) {
                     List<Task> tasks = new ArrayList<>();
-                    while (rs.next()){
+                    while (rs.next()) {
                         tasks.add(new Task(
                                 rs.getInt("id"),
                                 rs.getInt("player_id"),
                                 rs.getString("task_name"),
-                                Status.valueOf(rs.getString("status").toUpperCase())
+                                rs.getString("challenge_id"),
+                                Status.valueOf(rs.getString("status").toUpperCase()),
+                                rs.getInt("progress")
                         ));
                     }
                     return tasks;
@@ -202,26 +222,27 @@ public class MySqlStorage implements Storage {
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
-        },executorService);
+        }, executorService);
     }
 
     @Override
     public CompletableFuture<List<Task>> getTasksByStatus(int playerId, Status status) {
         return CompletableFuture.supplyAsync(() -> {
-            try(final Connection conn = dataSource.getConnection();
-            final PreparedStatement ps = conn.prepareStatement(
-                    "SELECT * FROM tasks WHERE player_id = ? AND status = ?"
-            )){
+            final String sql = "SELECT * FROM tasks WHERE player_id = ? AND status = ?";
+            try (Connection conn = dataSource.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setInt(1, playerId);
                 ps.setString(2, status.name());
-                try(final ResultSet rs = ps.executeQuery()){
+                try (ResultSet rs = ps.executeQuery()) {
                     List<Task> tasks = new ArrayList<>();
-                    while (rs.next()){
+                    while (rs.next()) {
                         tasks.add(new Task(
                                 rs.getInt("id"),
                                 rs.getInt("player_id"),
                                 rs.getString("task_name"),
-                                Status.valueOf(rs.getString("status").toUpperCase())
+                                rs.getString("challenge_id"),
+                                Status.valueOf(rs.getString("status").toUpperCase()),
+                                rs.getInt("progress")
                         ));
                     }
                     return tasks;
@@ -235,21 +256,21 @@ public class MySqlStorage implements Storage {
     @Override
     public void addTask(Task task) {
         CompletableFuture.runAsync(() -> {
-            final String sql = "INSERT INTO tasks (player_id, task_name, status) VALUES (?, ?, ?)";
-            try (final Connection conn = dataSource.getConnection();
-                 PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);) {
+            final String sql = "INSERT INTO tasks (player_id, task_name, challenge_id, status, progress) VALUES (?, ?, ?, ?, ?)";
+            try (Connection conn = dataSource.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
                 ps.setInt(1, task.getPlayerId());
                 ps.setString(2, task.getTaskName());
-                ps.setString(3, task.getStatus().name());
+                ps.setString(3, task.getChallengeId());
+                ps.setString(4, task.getStatus().name());
+                ps.setInt(5, task.getProgress());
                 ps.executeUpdate();
                 try (ResultSet rs = ps.getGeneratedKeys()) {
                     if (rs.next()) {
-                        int generatedId = rs.getInt(1);
-                        task.setId(generatedId);
+                        task.setId(rs.getInt(1));
                     }
                 }
             } catch (SQLException e) {
-                e.printStackTrace();
                 throw new RuntimeException(e);
             }
         }, executorService);
@@ -259,8 +280,8 @@ public class MySqlStorage implements Storage {
     public void removeTask(int id) {
         CompletableFuture.runAsync(() -> {
             final String sql = "DELETE FROM tasks WHERE id = ?";
-            try (final Connection conn = dataSource.getConnection();
-                 final PreparedStatement ps = conn.prepareStatement(sql)) {
+            try (Connection conn = dataSource.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setInt(1, id);
                 ps.executeUpdate();
             } catch (SQLException e) {
@@ -272,12 +293,13 @@ public class MySqlStorage implements Storage {
     @Override
     public void updateTask(Task task) {
         CompletableFuture.runAsync(() -> {
-            final String sql = "UPDATE tasks SET task_name = ?, status = ? WHERE id = ?";
-            try (final Connection conn = dataSource.getConnection();
-                 final PreparedStatement ps = conn.prepareStatement(sql)) {
+            final String sql = "UPDATE tasks SET task_name = ?, status = ?, progress = ? WHERE id = ?";
+            try (Connection conn = dataSource.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setString(1, task.getTaskName());
                 ps.setString(2, task.getStatus().name());
-                ps.setInt(3, task.getId());
+                ps.setInt(3, task.getProgress());
+                ps.setInt(4, task.getId());
                 ps.executeUpdate();
             } catch (SQLException e) {
                 throw new RuntimeException(e);
@@ -289,13 +311,11 @@ public class MySqlStorage implements Storage {
     public CompletableFuture<Integer> countTasksByStatus(String status) {
         return CompletableFuture.supplyAsync(() -> {
             final String sql = "SELECT COUNT(*) AS count FROM tasks WHERE status = ?";
-            try (final Connection conn = dataSource.getConnection();
-                 final PreparedStatement ps = conn.prepareStatement(sql)) {
+            try (Connection conn = dataSource.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setString(1, status.toUpperCase());
-                try (final ResultSet rs = ps.executeQuery()) {
-                    if (rs.next()) {
-                        return rs.getInt("count");
-                    }
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) return rs.getInt("count");
                 }
             } catch (SQLException e) {
                 throw new RuntimeException(e);
@@ -308,12 +328,10 @@ public class MySqlStorage implements Storage {
     public CompletableFuture<Integer> countPlayers() {
         return CompletableFuture.supplyAsync(() -> {
             final String sql = "SELECT COUNT(*) AS count FROM players";
-            try (final Connection conn = dataSource.getConnection();
-                 final PreparedStatement ps = conn.prepareStatement(sql);
-                 final ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt("count");
-                }
+            try (Connection conn = dataSource.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(sql);
+                 ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt("count");
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
@@ -321,6 +339,3 @@ public class MySqlStorage implements Storage {
         }, executorService);
     }
 }
-
-
-

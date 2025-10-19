@@ -14,5 +14,7 @@ public class Task {
     private int id;
     private int playerId;
     private String taskName;
+    private String challengeId;
     private Status status;
+    private int progress;
 }

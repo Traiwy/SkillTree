@@ -2,6 +2,7 @@ package ru.traiwy.skilltree;
 
 import ru.traiwy.skilltree.command.AdminCommand;
 import ru.traiwy.skilltree.event.MobKillEvent;
+import ru.traiwy.skilltree.event.PlayersJoinEvent;
 import ru.traiwy.skilltree.event.RaidFinishListener;
 import ru.traiwy.skilltree.inv.AlchemistMenu;
 import ru.traiwy.skilltree.inv.ChoiceMenu;
@@ -32,29 +33,17 @@ public final class SkillTree extends JavaPlugin {
         final FarmerMenu farmerMenuHolder = new FarmerMenu(panelManager);
         final AlchemistMenu alchemistMenu = new AlchemistMenu(panelManager);
 
-        ConfigManager.Challenge challenge = configManager.getById("t1");
-
-        if (challenge != null) {
-            System.out.println("Найдено задание: " + challenge.getDisplayName());
-            System.out.println("Цель: " + challenge.getGoal());
-            System.out.println("Текущий прогресс: " + challenge.getData().getCurrent());
-            System.out.println("Необходимо: " + challenge.getData().getRequired());
-        } else {
-            System.out.println("Задание с таким ID не найдено!");
-        }
-
-
         final ChoiceMenu choiceMenu = new ChoiceMenu(
                 warriorMenu,
                 farmerMenuHolder,
                 alchemistMenu,
                 mySqlStorage,
-                configManager,
-                this);
+                challengeManager);
         getCommand("skilltree").setExecutor(new AdminCommand(this, mySqlStorage, choiceMenu, warriorMenu, farmerMenuHolder, alchemistMenu));
         getServer().getPluginManager().registerEvents(choiceMenu, this);
-        getServer().getPluginManager().registerEvents(new MobKillEvent(mySqlStorage, configManager), this);
+        getServer().getPluginManager().registerEvents(new MobKillEvent(mySqlStorage, configManager, challengeManager), this);
         getServer().getPluginManager().registerEvents(new RaidFinishListener(mySqlStorage), this);
+        getServer().getPluginManager().registerEvents(new PlayersJoinEvent(mySqlStorage), this);
 
     }
 

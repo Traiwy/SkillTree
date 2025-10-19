@@ -8,80 +8,88 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import ru.traiwy.skilltree.data.PlayerData;
 import ru.traiwy.skilltree.data.Task;
 import ru.traiwy.skilltree.enums.Status;
+import ru.traiwy.skilltree.manager.ChallengeManager;
 import ru.traiwy.skilltree.manager.ConfigManager;
 import ru.traiwy.skilltree.storage.MySqlStorage;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 @AllArgsConstructor
 public class MobKillEvent implements Listener {
     private final MySqlStorage mySqlStorage;
     private final ConfigManager configManager;
-
+    private final ChallengeManager challengeManager;
 
     @EventHandler
     public void onEntityDeath(EntityDeathEvent event) {
         Player killer = event.getEntity().getKiller();
-        Entity killMob = event.getEntity();
         if (killer == null) return;
 
         String mobType = getMobType(event.getEntity());
 
-        CompletableFuture.runAsync(() -> processMobKill(killer, mobType, killMob))
-                .exceptionally(throwable -> {
-                    throwable.printStackTrace();
-                    return null;
-                });
+        mySqlStorage.getPlayer(killer.getName()).thenAccept(playerData -> {
+            if (playerData == null) return;
+
+            mySqlStorage.getTasksByPlayer(playerData.getId()).thenAccept(tasks -> {
+                for (Task task : tasks) {
+                    processTask(task, mobType);
+                }
+            });
+        });
     }
 
-    private void processMobKill(Player player, String mobType, Entity killMob) {
-        PlayerData playerData = mySqlStorage.getPlayer(player.getName()).join();
-        if (playerData == null) return;
+    private void processTask(Task task, String mobType) {
+        if (task.getStatus() == Status.COMPLETED) return;
 
-        List<Task> tasks = mySqlStorage.getTasksByPlayer(playerData.getId()).join();
+        ConfigManager.Challenge challenge = challengeManager.getChallengeById(task.getChallengeId());
+        if (challenge == null || !"kill-mob".equals(challenge.getType())) return;
 
-        for (Task task : tasks) {
-            System.out.println("tasks: " + tasks);
-            System.out.println("Status: " + task.getStatus());
+        Object rawEntities = challenge.getSettings().get("entityType");
+        if (!(rawEntities instanceof List<?> targetMobs)) return;
 
-            if (task.getStatus() != Status.IN_PROGRESS) continue;
+        String mobTypeUpper = mobType.toUpperCase();
+        for (Object obj : targetMobs) {
+            if (!(obj instanceof String entityName)) continue;
 
+            if (entityName.equalsIgnoreCase(mobTypeUpper)) {
+                int newProgress = task.getProgress() + 1;
+                if (newProgress > challenge.getData().getRequired()) {
+                    newProgress = challenge.getData().getRequired();
+                }
 
+                task.setProgress(newProgress);
 
+                if (newProgress >= challenge.getData().getRequired()) {
+                    task.setStatus(Status.COMPLETED);
+                    mySqlStorage.updateTask(task);
 
-            if(getMobType(killMob).equalsIgnoreCase("zombie")){
+                    String nextId = challenge.getNextChallengeId();
+                    System.out.println(nextId);
+                    if (nextId != null) {
+                        ConfigManager.Challenge nextChallenge = challengeManager.getChallengeById(nextId);
+                        if (nextChallenge != null) {
+                            Task nextTask = new Task(
+                                    0,
+                                    task.getPlayerId(),
+                                    nextChallenge.getDisplayName(),
+                                    nextId,
+                                    Status.IN_PROGRESS,
+                                    0
+                            );
+                            mySqlStorage.addTask(nextTask);
 
+                        }else{
+
+                        }
+                    }
+                }else{
+                    mySqlStorage.updateTask(task);
+                }
+
+                break;
             }
-
         }
     }
-
-    private boolean doesTaskMatchMob(Entity entity, String mobType) {
-            String entityType = getMobType(entity);
-            boolean match = entityType.equalsIgnoreCase(mobType);
-            return match;
-    }
-    public void updateTaskProgress(Entity killMob, String mobType, PlayerData playerData, Task task){
-        if (doesTaskMatchMob(killMob, mobType)) {
-                int currentProgress = playerData.getProgress();
-                int newProgress = currentProgress + 1;
-                System.out.println("newProgress: " + newProgress);
-
-                playerData.setProgress(newProgress);
-                mySqlStorage.updatePlayer(playerData);
-
-               // if (newProgress >= requiredKills) {
-               //     task.setStatus(Status.COMPLETED);
-               //     playerData.setProgress(0);
-               //     mySqlStorage.updatePlayer(playerData);
-               // }
-
-                mySqlStorage.updateTask(task);
-            }
-    }
-
 
     private String getMobType(Entity entity) {
         if (entity instanceof Zombie) return "zombie";

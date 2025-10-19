@@ -8,6 +8,7 @@ challenges:
       current: 0
       required: 5
     displayName: "Воин"
+    nextChallengeId: "warrior_task2"
     settings:
       entityType:
         - ZOMBIE
@@ -21,6 +22,7 @@ challenges:
       current: 0
       required: 3
     displayName: "Лучник"
+    nextChallengeId: "warrior_task3"
     settings:
       entityType:
         - SKELETON
@@ -34,6 +36,7 @@ challenges:
       current: 0
       required: 2
     displayName: "Охотник"
+    nextChallengeId: "warrior_task4"
     settings:
       entityType:
         - SPIDER
@@ -47,6 +50,7 @@ challenges:
       current: 0
       required: 1
     displayName: "Герой деревни"
+    nextChallengeId: "warrior_task5"
     settings:
       eventType:
         - RAID_WIN
@@ -60,6 +64,7 @@ challenges:
       current: 0
       required: 1
     displayName: "Меткий стрелок"
+    nextChallengeId: "warrior_task6"
     settings:
       distance: 30
     metadata: null
@@ -72,6 +77,7 @@ challenges:
       current: 0
       required: 1
     displayName: "Покоритель лавы"
+    nextChallengeId: "warrior_task7"
     settings:
       condition:
         - LAVA_SURVIVE
@@ -85,6 +91,7 @@ challenges:
       current: 0
       required: 1
     displayName: "Охотник на ведьм"
+    nextChallengeId: "warrior_task8"
     settings:
       entityType:
         - WITCH
@@ -98,6 +105,7 @@ challenges:
       current: 0
       required: 1
     displayName: "Исследователь пещер"
+    nextChallengeId: "warrior_task9"
     settings:
       item:
         - DIAMOND
@@ -112,6 +120,7 @@ challenges:
       current: 0
       required: 1
     displayName: "Покоритель бездны"
+    nextChallengeId:
     settings:
       entityType:
         - ENDER_DRAGON
