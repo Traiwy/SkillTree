@@ -74,7 +74,7 @@ challenges:
     displayName: "Меткий стрелок"
     nextChallengeId: "warrior_task6"
     settings:
-      distance: 30
+      distance: 4
     metadata: null
 
   - type: "survive"

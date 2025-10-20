@@ -5,9 +5,11 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -29,15 +31,16 @@ public class ConfigManager {
     }
 
 
-    public void load(FileConfiguration config){
-        try{
+    public void load(FileConfiguration config) {
+        try {
             loadMainConfig();
             loadDataBaseConfig();
             parseChallenges();
         } catch (Exception e) {
-             throw new IllegalStateException("Ошибка загрузки конфигурации", e);
+            throw new IllegalStateException("Ошибка загрузки конфигурации", e);
         }
     }
+
     public void loadMainConfig() {
         plugin.saveDefaultConfig();
         plugin.reloadConfig();
@@ -66,42 +69,43 @@ public class ConfigManager {
 
     }
 
-   private void parseChallenges() {
-    List<Map<?, ?>> rawList = challengeConfig.getMapList("challenges");
+    private void parseChallenges() {
+        List<Map<?, ?>> rawList = challengeConfig.getMapList("challenges");
 
-    if (rawList == null || rawList.isEmpty()) return;
+        if (rawList == null || rawList.isEmpty()) return;
 
-    for (Map map : rawList) {
-        try {
-            String type = (String) map.get("type");
-            String id = (String) map.get("id");
-            String displayName = (String) map.get("displayName");
+        for (Map map : rawList) {
+            try {
+                String type = (String) map.get("type");
+                String id = (String) map.get("id");
+                String displayName = (String) map.get("displayName");
 
-            String nextChallengeId = (String) map.get("nextChallengeId");
+                String nextChallengeId = (String) map.get("nextChallengeId");
 
-            List<String> goal = (List<String>) map.get("goal");
+                List<String> goal = (List<String>) map.get("goal");
 
-            Map dataMap = (Map) map.get("data");
-            int current = ((Number) dataMap.get("current")).intValue();
-            int required = ((Number) dataMap.get("required")).intValue();
+                Map dataMap = (Map) map.get("data");
+                int current = ((Number) dataMap.get("current")).intValue();
+                int required = ((Number) dataMap.get("required")).intValue();
 
-            Map settings = (Map) map.get("settings");
-            Map metadata = (Map) map.get("metadata");
+                Map settings = (Map) map.get("settings");
+                Map metadata = (Map) map.get("metadata");
 
-            Challenge challenge = new Challenge(type, id, goal,
-                    new ChallengeData(current, required), displayName, nextChallengeId,
-                    settings, metadata);
+                Challenge challenge = new Challenge(type, id, goal,
+                        new ChallengeData(current, required), displayName, nextChallengeId,
+                        settings, metadata);
 
-            challenges.add(challenge);
-        } catch (Exception e) {
-            log.error("Ошибка при парсинге испытания: {}", map, e);
+                challenges.add(challenge);
+            } catch (Exception e) {
+                log.error("Ошибка при парсинге испытания: {}", map, e);
+            }
         }
     }
-}
 
     public List<Challenge> getChallenges() {
         return challenges;
     }
+
     public Challenge getById(String id) {
         return challenges.stream()
                 .filter(c -> c.getId().equalsIgnoreCase(id))
@@ -130,7 +134,7 @@ public class ConfigManager {
     }
 
 
-       private static void loadMysql(ConfigurationSection sqlSection){
+    private static void loadMysql(ConfigurationSection sqlSection) {
         MySQL.HOST = sqlSection.getString("host");
         MySQL.PORT = sqlSection.getInt("port");
         MySQL.USER = sqlSection.getString("user");
@@ -144,11 +148,64 @@ public class ConfigManager {
     }
 
 
-    public static class MySQL{
+    public static class MySQL {
         public static String HOST;
         public static int PORT;
         public static String USER;
         public static String PASSWORD;
         public static String DATABASE;
+    }
+
+    public void getAllInfo(Player player, ConfigManager.Challenge challenge) {
+        if (challenge == null) {
+            player.sendMessage("§c[SkillTree] Челлендж не найден!");
+            return;
+        }
+
+        player.sendMessage("§6===== §eИнформация о челлендже §6=====§r");
+        player.sendMessage("§eID: §f" + challenge.getId());
+        player.sendMessage("§eТип: §f" + challenge.getType());
+        player.sendMessage("§eНазвание: §f" + challenge.getDisplayName());
+        player.sendMessage("§eСледующее задание: §f" +
+                (challenge.getNextChallengeId() != null ? challenge.getNextChallengeId() : "§7Нет"));
+
+        // Цели
+        player.sendMessage("§eЦель:");
+        if (challenge.getGoal() != null && !challenge.getGoal().isEmpty()) {
+            for (String goal : challenge.getGoal()) {
+                player.sendMessage("  §7- " + goal);
+            }
+        } else {
+            player.sendMessage("  §7(Нет целей)");
+        }
+
+        // Прогресс
+        if (challenge.getData() != null) {
+            player.sendMessage("§eПрогресс: §f" + challenge.getData().getCurrent() + "§7/§f" + challenge.getData().getRequired());
+        } else {
+            player.sendMessage("§eПрогресс: §7Не задан");
+        }
+
+        // Настройки
+        player.sendMessage("§eНастройки:");
+        if (challenge.getSettings() != null && !challenge.getSettings().isEmpty()) {
+            for (Map.Entry<String, Object> entry : challenge.getSettings().entrySet()) {
+                player.sendMessage("  §f" + entry.getKey() + ": §7" + entry.getValue());
+            }
+        } else {
+            player.sendMessage("  §7(Нет настроек)");
+        }
+
+        // Метаданные
+        player.sendMessage("§eМетаданные:");
+        if (challenge.getMetadata() != null && !challenge.getMetadata().isEmpty()) {
+            for (Map.Entry<String, Object> entry : challenge.getMetadata().entrySet()) {
+                player.sendMessage("  §f" + entry.getKey() + ": §7" + entry.getValue());
+            }
+        } else {
+            player.sendMessage("  §7(Пусто)");
+        }
+
+        player.sendMessage("§6==============================");
     }
 }

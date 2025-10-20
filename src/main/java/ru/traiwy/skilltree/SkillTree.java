@@ -1,9 +1,7 @@
 package ru.traiwy.skilltree;
 
 import ru.traiwy.skilltree.command.AdminCommand;
-import ru.traiwy.skilltree.event.BlocksBreakEvent;
-import ru.traiwy.skilltree.event.MobKillEvent;
-import ru.traiwy.skilltree.event.PlayersJoinEvent;
+import ru.traiwy.skilltree.event.*;
 import ru.traiwy.skilltree.inv.AlchemistMenu;
 import ru.traiwy.skilltree.inv.ChoiceMenu;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -25,7 +23,7 @@ public final class SkillTree extends JavaPlugin {
         configManager.load(getConfig());
         final MySqlStorage mySqlStorage = new MySqlStorage();
         mySqlStorage.initDatabase();
-        final ChallengeManager challengeManager = new ChallengeManager(configManager);
+        final ChallengeManager challengeManager = new ChallengeManager(configManager, mySqlStorage);
         final PanelManager panelManager = new PanelManager(configManager, mySqlStorage, challengeManager);
         panelManager.initializeSkillTasks();
 
@@ -44,6 +42,8 @@ public final class SkillTree extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new MobKillEvent(mySqlStorage, configManager, challengeManager), this);
         getServer().getPluginManager().registerEvents(new BlocksBreakEvent(challengeManager, mySqlStorage, this), this);
         getServer().getPluginManager().registerEvents(new PlayersJoinEvent(mySqlStorage), this);
+        getServer().getPluginManager().registerEvents(new BlockHitEvent(challengeManager, mySqlStorage, this), this);
+        getServer().getPluginManager().registerEvents(new LavaDamageEvent(mySqlStorage, challengeManager, this), this);
 
     }
 

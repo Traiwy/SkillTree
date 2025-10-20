@@ -1,6 +1,10 @@
 package ru.traiwy.skilltree.manager;
 
 
+import ru.traiwy.skilltree.data.Task;
+import ru.traiwy.skilltree.enums.Status;
+import ru.traiwy.skilltree.storage.MySqlStorage;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -9,9 +13,11 @@ import java.util.stream.Collectors;
 public class ChallengeManager {
 
     private final ConfigManager configManager;
+    private final MySqlStorage mySqlStorage;
 
-    public ChallengeManager(ConfigManager configManager) {
+    public ChallengeManager(ConfigManager configManager, MySqlStorage mySqlStorage) {
         this.configManager = configManager;
+        this.mySqlStorage = mySqlStorage;
     }
 
 
@@ -91,5 +97,24 @@ public class ChallengeManager {
         }
 
         return ids;
+    }
+
+    public void setNextChallenge(ConfigManager.Challenge challenge, Task task) {
+        String nextId = challenge.getNextChallengeId();
+
+        if (nextId != null) {
+            ConfigManager.Challenge next = getChallengeById(nextId);
+            if (next != null) {
+                Task nextTask = new Task(
+                        0,
+                        task.getPlayerId(),
+                        next.getDisplayName(),
+                        nextId,
+                        Status.IN_PROGRESS,
+                        0
+                );
+                mySqlStorage.addTask(nextTask);
+            }
+        }
     }
 }

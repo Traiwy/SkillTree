@@ -38,11 +38,13 @@ public class BlocksBreakEvent implements Listener {
     }
 
     @EventHandler
-public void onPlayerItemBreakEvent(PlayerItemBreakEvent event) {
-        final ItemStack item = event.getBrokenItem();
+    public void onPlayerItemBreakEvent(PlayerItemBreakEvent event) {
+        final Material item = event.getBrokenItem().getType();
         final Player player = event.getPlayer();
 
-        Material lastBlock = lastBreakBlock.get(player);
+
+        final Material lastBlock = lastBreakBlock.get(player);
+        lastBreakBlock.remove(player);
         if (lastBlock == null) return;
 
         mySqlStorage.getPlayer(player.getName()).thenAccept(playerData -> {
@@ -59,37 +61,42 @@ public void onPlayerItemBreakEvent(PlayerItemBreakEvent event) {
                     final List<Material> materialItem = getMaterialItem(task);
                     if (materialItem == null || materialBlock == null) continue;
 
-                    if (materialItem.contains(item.getType()) && materialBlock.contains(lastBlock)) {
-                        int newProgress = Math.min(task.getProgress() + 1, challenge.getData().getRequired());
-                        task.setProgress(newProgress);
+                    for (Material materialB : materialBlock) {
+                        for (Material materialI : materialItem) {
+                            if (materialI == item && materialB == lastBlock) {
+                                int newProgress = Math.min(task.getProgress() + 1, challenge.getData().getRequired());
+                                task.setProgress(newProgress);
 
-                        Bukkit.getScheduler().runTask(plugin, () -> {
-                            player.sendMessage("§aТы сломал меч об дерево. Задание выполнено!");
-                        });
+                                Bukkit.getScheduler().runTask(plugin, () -> {
+                                    player.sendMessage("§aТы сломал меч об дерево. Задание выполнено!");
+                                });
 
-                        if (newProgress >= challenge.getData().getRequired()) {
-                            task.setStatus(Status.COMPLETED);
-                            mySqlStorage.updateTask(task);
+                                if (newProgress >= challenge.getData().getRequired()) {
+                                    task.setStatus(Status.COMPLETED);
+                                    mySqlStorage.updateTask(task);
 
-                            String nextId = challenge.getNextChallengeId();
-                            if (nextId != null) {
-                                ConfigManager.Challenge next = challengeManager.getChallengeById(nextId);
-                                if (next != null) {
-                                    Task nextTask = new Task(
-                                            0,
-                                            task.getPlayerId(),
-                                            next.getDisplayName(),
-                                            nextId,
-                                            Status.IN_PROGRESS,
-                                            0
-                                    );
-                                    mySqlStorage.addTask(nextTask);
+
+                                    String nextId = challenge.getNextChallengeId();
+                                    if (nextId != null) {
+                                        ConfigManager.Challenge next = challengeManager.getChallengeById(nextId);
+                                        if (next != null) {
+                                            Task nextTask = new Task(
+                                                    0,
+                                                    task.getPlayerId(),
+                                                    next.getDisplayName(),
+                                                    nextId,
+                                                    Status.IN_PROGRESS,
+                                                    0
+                                            );
+                                            mySqlStorage.addTask(nextTask);
+                                        }
+                                    }
+                                } else {
+                                    mySqlStorage.updateTask(task);
                                 }
+                                break;
                             }
-                        } else {
-                            mySqlStorage.updateTask(task);
                         }
-                        break;
                     }
                 }
             });

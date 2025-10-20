@@ -12,6 +12,7 @@ import ru.traiwy.skilltree.inv.AlchemistMenu;
 import ru.traiwy.skilltree.inv.ChoiceMenu;
 import ru.traiwy.skilltree.inv.FarmerMenu;
 import ru.traiwy.skilltree.inv.WarriorMenu;
+import ru.traiwy.skilltree.manager.ConfigManager;
 import ru.traiwy.skilltree.storage.MySqlStorage;
 
 import java.util.List;
