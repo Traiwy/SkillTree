@@ -9,7 +9,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.player.PlayerItemBreakEvent;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import ru.traiwy.skilltree.data.Task;
 import ru.traiwy.skilltree.enums.Status;
@@ -34,10 +33,33 @@ public class BlocksBreakEvent implements Listener {
         final Block block = event.getBlock();
         final Player player = event.getPlayer();
 
+        player.sendMessage(block.getType() + " Высота: " + block.getY());
 
-        if(isWood(block.getType())){
+        if (isWood(block.getType())) {
             lastBreakBlock.put(player, block.getType());
         }
+
+        mySqlStorage.getPlayer(player.getName()).thenAccept(playerData -> {
+            if (playerData == null) return;
+
+            mySqlStorage.getTasksByPlayer(playerData.getId()).thenAccept(tasks -> {
+                for (Task task : tasks) {
+                     Bukkit.getScheduler().runTask(plugin, () -> {
+                         if (!eventManager.isApplicableTask(task, "find-item")) return;
+
+                         ConfigManager.Challenge challenge = challengeManager.getChallengeById(task.getChallengeId());
+                         if (challenge == null) return;
+
+                         List<Material> validBlocks = getAllowedBlocks(challenge);
+                         if (validBlocks == null || !validBlocks.contains(block.getType())) return;
+
+                         if (!isValidYLevel(block, challenge)) return;
+
+                         eventManager.handleProgress(task, challenge, player);
+                     });
+                }
+            });
+        });
     }
 
     @EventHandler
@@ -67,7 +89,9 @@ public class BlocksBreakEvent implements Listener {
                         for (Material materialI : materialItem) {
                             if (materialI == item && materialB == lastBlock) {
                                 eventManager.handleProgress(task, challenge, player);
-                                challengeManager.setNextChallenge(challenge, task);
+                                if(task.getStatus() == Status.COMPLETED) {
+                                    challengeManager.setNextChallenge(challenge, task);
+                                }
 
                                 Bukkit.getScheduler().runTask(plugin, () -> {
                                     player.sendMessage("§aТы сломал меч об дерево. Задание выполнено!");
@@ -85,19 +109,19 @@ public class BlocksBreakEvent implements Listener {
         });
     }
 
-    public List<Material> getMaterialBlock(ConfigManager.Challenge challenge){
+    public List<Material> getMaterialBlock(ConfigManager.Challenge challenge) {
 
         final Object rawBlock = challenge.getSettings().get("block");
-        if(!(rawBlock instanceof List<?> targetBlockList) ) return null;
-         List<Material> materials = new ArrayList<>();
+        if (!(rawBlock instanceof List<?> targetBlockList)) return null;
+        List<Material> materials = new ArrayList<>();
 
-        for(Object obj : targetBlockList){
-            if(!(obj instanceof String blockName)) continue;
+        for (Object obj : targetBlockList) {
+            if (!(obj instanceof String blockName)) continue;
 
-            try{
+            try {
                 materials.add(Material.valueOf(blockName.toUpperCase()));
             } catch (IllegalArgumentException e) {
-                 System.out.println("§cНеизвестный блок в конфиге: " + blockName);
+                System.out.println("§cНеизвестный блок в конфиге: " + blockName);
             }
         }
         return materials.isEmpty() ? null : materials;
@@ -124,11 +148,44 @@ public class BlocksBreakEvent implements Listener {
         return materials.isEmpty() ? null : materials;
     }
 
-     private boolean isWood(Material mat) {
+    private boolean isWood(Material mat) {
         return switch (mat) {
             case OAK_LOG, SPRUCE_LOG, BIRCH_LOG, JUNGLE_LOG, DARK_OAK_LOG, ACACIA_LOG, CHERRY_LOG -> true;
             default -> false;
         };
+    }
+
+    private List<Material> getAllowedBlocks(ConfigManager.Challenge challenge) {
+        Object rawBlockList = challenge.getSettings().get("item");
+        if (!(rawBlockList instanceof List<?> blockList)) {
+            Bukkit.getLogger().info("[DEBUG] Challenge " + challenge.getId() + " не содержит список блоков.");
+            return null;
+        }
+
+        List<Material> materials = new ArrayList<>();
+        for (Object obj : blockList) {
+            if (obj instanceof String blockName) {
+                try {
+                    Material mat = Material.valueOf(blockName.toUpperCase());
+                    materials.add(mat);
+                } catch (IllegalArgumentException e) {
+                    Bukkit.getLogger().warning("[DEBUG] Неизвестный блок в конфиге: " + blockName);
+                }
+            }
+        }
+
+        Bukkit.getLogger().info("[DEBUG] getAllowedBlocks -> " + materials);
+        return materials.isEmpty() ? null : materials;
+    }
+
+    private boolean isValidYLevel(Block block, ConfigManager.Challenge challenge) {
+        Object yLevelObj = challenge.getSettings().get("yLevel");
+        if (yLevelObj instanceof Number yLevel) {
+            Bukkit.getLogger().info("[DEBUG] Проверка Y: блок " + block.getY() + ", лимит " + yLevel.intValue());
+            return block.getY() <= yLevel.intValue();
+        }
+        Bukkit.getLogger().info("[DEBUG] В challenge нет yLevel, возвращаю true");
+        return true;
     }
 
 }

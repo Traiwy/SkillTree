@@ -49,7 +49,9 @@ public class BlockHitEvent implements Listener {
 
                     if (playerDistance >= distance) {
                         eventManager.handleProgress(task, challenge, player);
-                        challengeManager.setNextChallenge(challenge, task);
+                        if(task.getStatus() == Status.COMPLETED) {
+                            challengeManager.setNextChallenge(challenge, task);
+                        }
 
                         Bukkit.getScheduler().runTask(plugin, () -> {
                             player.sendMessage("Ты попал");

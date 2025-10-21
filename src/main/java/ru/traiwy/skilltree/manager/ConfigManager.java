@@ -149,11 +149,6 @@ public class ConfigManager {
         MySQL.USER = sqlSection.getString("user");
         MySQL.PASSWORD = sqlSection.getString("password");
         MySQL.DATABASE = sqlSection.getString("database");
-        log.info(sqlSection.getString("host"));
-        log.info(sqlSection.getString("port"));
-        log.info(sqlSection.getString("port"));
-        log.info(sqlSection.getString("password"));
-        log.info(sqlSection.getString("database"));
     }
 
 

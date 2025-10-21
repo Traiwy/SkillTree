@@ -13,9 +13,10 @@ public class EventManager {
 
     public boolean isApplicableTask(Task task, String typeConfig) {
         if (task.getStatus() == Status.COMPLETED) return false;
-
         ConfigManager.Challenge challenge = challengeManager.getChallengeById(task.getChallengeId());
-        return (challenge == null || !typeConfig.equals(challenge.getType()));
+        if (challenge == null) return false;
+
+        return typeConfig.equalsIgnoreCase(challenge.getType());
     }
 
     public void handleProgress(Task task, ConfigManager.Challenge challenge, Player player) {

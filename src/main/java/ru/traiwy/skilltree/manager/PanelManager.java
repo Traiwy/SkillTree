@@ -140,7 +140,6 @@ public class PanelManager {
         }
 
         for (String id : allIds) {
-            System.out.println("id: " + id);
             if (getStartNameTask(id, "warrior")) addTaskToSkill(Skill.WARRIOR, id);
             if (getStartNameTask(id, "alchemist")) addTaskToSkill(Skill.ALCHEMIST, id);
             if (getStartNameTask(id, "farmer")) addTaskToSkill(Skill.FARMER, id);

@@ -68,8 +68,9 @@ public class LavaDamageEvent implements Listener {
                     if (condition == null || !condition.toString().contains("LAVA_SURVIVE")) continue;
 
                     eventManager.handleProgress(task, challenge, player);
-                    challengeManager.setNextChallenge(challenge, task);
-
+                    if(task.getStatus() == Status.COMPLETED) {
+                        challengeManager.setNextChallenge(challenge, task);
+                    }
                     Bukkit.getScheduler().runTask(plugin, () ->
                             player.sendMessage("§aВы выжили после купания в лаве!")
                     );

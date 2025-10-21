@@ -40,7 +40,7 @@ public class MobKillEvent implements Listener {
     }
 
     private void processTask(Task task, String mobType, Player player) {
-        eventManager.isApplicableTask(task, "kill-mob");
+        if (!eventManager.isApplicableTask(task, "kill-mob")) return;
 
         ConfigManager.Challenge challenge = challengeManager.getChallengeById(task.getChallengeId());
         final Object rawEntities = challenge.getSettings().get("entityType");
@@ -52,9 +52,10 @@ public class MobKillEvent implements Listener {
 
             if (entityName.equalsIgnoreCase(mobTypeUpper)) {
                 eventManager.handleProgress(task, challenge, player);
-                challengeManager.setNextChallenge(challenge, task);
-            }else{
-                mySqlStorage.updateTask(task);
+                if(task.getStatus() == Status.COMPLETED) {
+                    challengeManager.setNextChallenge(challenge, task);
+                    return;
+                }
             }
         }
     }
