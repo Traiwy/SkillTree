@@ -6,16 +6,24 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
+import ru.traiwy.skilltree.data.Task;
+import ru.traiwy.skilltree.enums.Skill;
+import ru.traiwy.skilltree.enums.Status;
+import ru.traiwy.skilltree.storage.MySqlStorage;
+import ru.traiwy.skilltree.util.ItemMetaUtils;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 
 @Slf4j
@@ -102,6 +110,7 @@ public class ConfigManager {
         }
     }
 
+
     public List<Challenge> getChallenges() {
         return challenges;
     }
@@ -156,56 +165,4 @@ public class ConfigManager {
         public static String DATABASE;
     }
 
-    public void getAllInfo(Player player, ConfigManager.Challenge challenge) {
-        if (challenge == null) {
-            player.sendMessage("§c[SkillTree] Челлендж не найден!");
-            return;
-        }
-
-        player.sendMessage("§6===== §eИнформация о челлендже §6=====§r");
-        player.sendMessage("§eID: §f" + challenge.getId());
-        player.sendMessage("§eТип: §f" + challenge.getType());
-        player.sendMessage("§eНазвание: §f" + challenge.getDisplayName());
-        player.sendMessage("§eСледующее задание: §f" +
-                (challenge.getNextChallengeId() != null ? challenge.getNextChallengeId() : "§7Нет"));
-
-        // Цели
-        player.sendMessage("§eЦель:");
-        if (challenge.getGoal() != null && !challenge.getGoal().isEmpty()) {
-            for (String goal : challenge.getGoal()) {
-                player.sendMessage("  §7- " + goal);
-            }
-        } else {
-            player.sendMessage("  §7(Нет целей)");
-        }
-
-        // Прогресс
-        if (challenge.getData() != null) {
-            player.sendMessage("§eПрогресс: §f" + challenge.getData().getCurrent() + "§7/§f" + challenge.getData().getRequired());
-        } else {
-            player.sendMessage("§eПрогресс: §7Не задан");
-        }
-
-        // Настройки
-        player.sendMessage("§eНастройки:");
-        if (challenge.getSettings() != null && !challenge.getSettings().isEmpty()) {
-            for (Map.Entry<String, Object> entry : challenge.getSettings().entrySet()) {
-                player.sendMessage("  §f" + entry.getKey() + ": §7" + entry.getValue());
-            }
-        } else {
-            player.sendMessage("  §7(Нет настроек)");
-        }
-
-        // Метаданные
-        player.sendMessage("§eМетаданные:");
-        if (challenge.getMetadata() != null && !challenge.getMetadata().isEmpty()) {
-            for (Map.Entry<String, Object> entry : challenge.getMetadata().entrySet()) {
-                player.sendMessage("  §f" + entry.getKey() + ": §7" + entry.getValue());
-            }
-        } else {
-            player.sendMessage("  §7(Пусто)");
-        }
-
-        player.sendMessage("§6==============================");
-    }
 }

@@ -132,7 +132,7 @@ public class PanelManager {
     }
 
     public void initializeSkillTasks() {
-        List<String> allIds = challengeManager.getAllId(); // получаем все ID челленджей
+        List<String> allIds = challengeManager.getAllId();
 
         if (allIds == null || allIds.isEmpty()) {
             System.out.println("§eНе найдено ни одного ID челленджа. Проверь, загружен ли конфиг.");

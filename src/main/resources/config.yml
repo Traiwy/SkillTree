@@ -116,7 +116,7 @@ challenges:
     nextChallengeId: "warrior_task9"
     settings:
       item:
-        - DIAMOND
+        - DIAMOND_ORE
       yLevel: 20
     metadata: null
 
@@ -372,3 +372,17 @@ challenges:
         - MELON
         - PUMPKIN
     metadata: null
+
+
+head:
+  display: "{player_name}"
+  type: PLAYER_HEAD
+  lore:
+    - "{skill}"
+    - "Статус выполнения: {num} / 9"
+    - "Максимальное здоровье: {max_health}"
+    - "Броня: {armor} единиц"
+
+
+
+

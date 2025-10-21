@@ -11,12 +11,14 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import ru.traiwy.skilltree.enums.Skill;
+import ru.traiwy.skilltree.manager.ConfigManager;
 import ru.traiwy.skilltree.manager.PanelManager;
 
 @AllArgsConstructor
 public class FarmerMenu implements InventoryHolder, Listener {
     private final Inventory inventory = Bukkit.createInventory(this, 54, "Путь фермера");
     private PanelManager panelManager;
+    private ConfigManager configManager;
 
     @Override
     public Inventory getInventory() {
@@ -36,6 +38,7 @@ public class FarmerMenu implements InventoryHolder, Listener {
         if(item.getType() ==  Material.GREEN_STAINED_GLASS_PANE){
             player.sendMessage("Вы получили награду");
         }
+
 
     }
 

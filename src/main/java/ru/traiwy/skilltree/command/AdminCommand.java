@@ -12,12 +12,14 @@ import ru.traiwy.skilltree.inv.AlchemistMenu;
 import ru.traiwy.skilltree.inv.ChoiceMenu;
 import ru.traiwy.skilltree.inv.FarmerMenu;
 import ru.traiwy.skilltree.inv.WarriorMenu;
-import ru.traiwy.skilltree.manager.ConfigManager;
 import ru.traiwy.skilltree.storage.MySqlStorage;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
-import static ru.traiwy.skilltree.enums.Skill.*;
 
 @AllArgsConstructor
 public class AdminCommand implements CommandExecutor, TabCompleter {
@@ -27,6 +29,8 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
     private final WarriorMenu warriorMenu;
     private final FarmerMenu farmerMenu;
     private final AlchemistMenu alchemistMenu;
+
+    private final String[] SUBCOMMAND = {"info", "addtask", "start"};
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
@@ -64,7 +68,16 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        return List.of();
+
+        if(args.length == 1){
+           String current = args[0].toLowerCase();
+
+           return Arrays.stream(SUBCOMMAND)
+                   .filter(k -> k.startsWith(current))
+                   .collect(Collectors.toList());
+        }
+
+        return Collections.emptyList();
     }
 
     public void showInfoPlayer(Player player) {
