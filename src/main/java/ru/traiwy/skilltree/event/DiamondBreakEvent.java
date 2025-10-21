@@ -1,6 +1,5 @@
 package ru.traiwy.skilltree.event;
 
-import com.google.protobuf.Descriptors;
 import lombok.AllArgsConstructor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -12,6 +11,7 @@ import ru.traiwy.skilltree.data.Task;
 import ru.traiwy.skilltree.enums.Status;
 import ru.traiwy.skilltree.manager.ChallengeManager;
 import ru.traiwy.skilltree.manager.ConfigManager;
+import ru.traiwy.skilltree.manager.EventManager;
 import ru.traiwy.skilltree.storage.MySqlStorage;
 
 import java.util.ArrayList;
@@ -22,6 +22,7 @@ import java.util.List;
 public class DiamondBreakEvent implements Listener {
     private final ChallengeManager challengeManager;
     private final MySqlStorage mySqlStorage;
+    private final EventManager eventManager;
 
 
     @EventHandler
@@ -34,7 +35,7 @@ public class DiamondBreakEvent implements Listener {
 
             mySqlStorage.getTasksByPlayer(playerData.getId()).thenAccept(tasks -> {
                 for (Task task : tasks) {
-                    if (!isApplicableTask(task)) continue;
+                    if (!eventManager.isApplicableTask(task, "find-item")) continue;
 
                     ConfigManager.Challenge challenge = challengeManager.getChallengeById(task.getChallengeId());
                     if (challenge == null) continue;
@@ -48,14 +49,6 @@ public class DiamondBreakEvent implements Listener {
                 }
             });
         });
-    }
-
-
-    private boolean isApplicableTask(Task task) {
-        if (task == null || task.getStatus() == Status.COMPLETED) return false;
-
-        ConfigManager.Challenge challenge = challengeManager.getChallengeById(task.getChallengeId());
-        return challenge != null && "find-item".equals(challenge.getType());
     }
 
 

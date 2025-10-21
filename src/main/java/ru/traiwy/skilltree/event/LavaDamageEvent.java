@@ -13,6 +13,7 @@ import ru.traiwy.skilltree.data.Task;
 import ru.traiwy.skilltree.enums.Status;
 import ru.traiwy.skilltree.manager.ChallengeManager;
 import ru.traiwy.skilltree.manager.ConfigManager;
+import ru.traiwy.skilltree.manager.EventManager;
 import ru.traiwy.skilltree.storage.MySqlStorage;
 
 import java.util.HashMap;
@@ -26,6 +27,7 @@ public class LavaDamageEvent implements Listener {
     private final MySqlStorage mySqlStorage;
     private final ChallengeManager challengeManager;
     private final JavaPlugin plugin;
+    private final EventManager eventManager;
 
     private final Set<Player> lavaPlayer = new HashSet<>();
 
@@ -54,35 +56,32 @@ public class LavaDamageEvent implements Listener {
 
     public void handleLavaSurvive(Player player){
         mySqlStorage.getPlayer(player.getName()).thenAccept(playerData -> {
+            if (playerData == null) return;
             final int playerId = playerData.getId();
 
             mySqlStorage.getTasksByPlayer(playerId).thenAccept(tasks -> {
-                for(Task task : tasks){
-                    if(task.getStatus() == Status.COMPLETED) continue;
+                for (Task task : tasks) {
+                    if (!(eventManager.isApplicableTask(task, "survive"))) continue;
 
                     ConfigManager.Challenge challenge = challengeManager.getChallengeById(task.getChallengeId());
-                    if(challenge == null || !"survive".equals(challenge.getType())) continue;
-
-
-                     Object condition = challenge.getSettings().get("condition");
+                    Object condition = challenge.getSettings().get("condition");
                     if (condition == null || !condition.toString().contains("LAVA_SURVIVE")) continue;
 
-                    int newProgress = Math.min(task.getProgress() + 1, challenge.getData().getRequired());
-                    task.setProgress(newProgress);
+                    eventManager.handleProgress(task, challenge, player);
+                    challengeManager.setNextChallenge(challenge, task);
 
-                    if (newProgress >= challenge.getData().getRequired()) {
-                        task.setStatus(Status.COMPLETED);
-                        mySqlStorage.updateTask(task);
-                        challengeManager.setNextChallenge(challenge, task);
-
-                        Bukkit.getScheduler().runTask(plugin, () ->
-                                player.sendMessage("§aВы выжили после купания в лаве!")
-                        );
-                    }
+                    Bukkit.getScheduler().runTask(plugin, () ->
+                            player.sendMessage("§aВы выжили после купания в лаве!")
+                    );
                 }
             });
         });
     }
-
 }
+
+
+
+
+
+
 

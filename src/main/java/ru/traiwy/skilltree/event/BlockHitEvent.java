@@ -14,6 +14,7 @@ import ru.traiwy.skilltree.data.Task;
 import ru.traiwy.skilltree.enums.Status;
 import ru.traiwy.skilltree.manager.ChallengeManager;
 import ru.traiwy.skilltree.manager.ConfigManager;
+import ru.traiwy.skilltree.manager.EventManager;
 import ru.traiwy.skilltree.storage.MySqlStorage;
 
 import java.lang.reflect.Method;
@@ -24,6 +25,7 @@ public class BlockHitEvent implements Listener {
     private final ChallengeManager challengeManager;
     private final MySqlStorage mySqlStorage;
     private final JavaPlugin plugin;
+    private final EventManager eventManager;
 
     @EventHandler
     public void onBlockHitEvent(ProjectileHitEvent event) {
@@ -35,46 +37,37 @@ public class BlockHitEvent implements Listener {
 
         if (hitBlock.getType() != Material.TARGET) return;
         mySqlStorage.getPlayer(player.getName()).thenAccept(playerData -> {
-            int playerId = playerData.getId();
+            if (playerData == null) return;
 
-            mySqlStorage.getTasksByPlayer(playerId).thenAccept(tasks -> {
+            mySqlStorage.getTasksByPlayer(playerData.getId()).thenAccept(tasks -> {
                 for (Task task : tasks) {
-                    if (task.getStatus() == Status.COMPLETED) continue;
+                    eventManager.isApplicableTask(task, "bow-hit");
                     final ConfigManager.Challenge challenge = challengeManager.getChallengeById(task.getChallengeId());
-                     if (challenge == null || !"bow-hit".equals(challenge.getType())) continue;
 
-                    double playerDistance = player.getLocation().distance(hitBlock.getLocation());
+                    final double playerDistance = player.getLocation().distance(hitBlock.getLocation());
                     final int distance = getDistance(challenge);
 
                     if (playerDistance >= distance) {
-                        int newProgress = Math.min(task.getProgress() + 1, challenge.getData().getRequired());
-                        task.setProgress(newProgress);
+                        eventManager.handleProgress(task, challenge, player);
+                        challengeManager.setNextChallenge(challenge, task);
 
-
-                        if (newProgress >= challenge.getData().getRequired()) {
-                            task.setStatus(Status.COMPLETED);
-                            mySqlStorage.updateTask(task);
-
-                             setNextChallenge(challenge, task);
-                        }
                         Bukkit.getScheduler().runTask(plugin, () -> {
-                            player.sendMessage("Вы попали");
+                            player.sendMessage("Ты попал");
                         });
 
                     } else {
                         mySqlStorage.updateTask(task);
                         Bukkit.getScheduler().runTask(plugin, () -> {
-                            player.sendMessage("Не попали");
+                            player.sendMessage("Не попал");
                         });
                     }
                 }
             });
         });
 
-    }
+    }{}
 
     public int getDistance(ConfigManager.Challenge challenge) {
-        if (challenge == null || !"bow-hit".equals(challenge.getType())) return 0;
 
         Object value = challenge.getSettings().get("distance");
         if (value instanceof Number num) {
@@ -90,22 +83,5 @@ public class BlockHitEvent implements Listener {
         return 0;
     }
 
-    public void setNextChallenge(ConfigManager.Challenge challenge, Task task) {
-        String nextId = challenge.getNextChallengeId();
 
-        if (nextId != null) {
-            ConfigManager.Challenge next = challengeManager.getChallengeById(nextId);
-            if (next != null) {
-                Task nextTask = new Task(
-                        0,
-                        task.getPlayerId(),
-                        next.getDisplayName(),
-                        nextId,
-                        Status.IN_PROGRESS,
-                        0
-                );
-                mySqlStorage.addTask(nextTask);
-            }
-        }
-    }
 }

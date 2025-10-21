@@ -10,6 +10,7 @@ import ru.traiwy.skilltree.data.Task;
 import ru.traiwy.skilltree.enums.Status;
 import ru.traiwy.skilltree.manager.ChallengeManager;
 import ru.traiwy.skilltree.manager.ConfigManager;
+import ru.traiwy.skilltree.manager.EventManager;
 import ru.traiwy.skilltree.storage.MySqlStorage;
 
 import java.util.List;
@@ -19,6 +20,7 @@ public class MobKillEvent implements Listener {
     private final MySqlStorage mySqlStorage;
     private final ConfigManager configManager;
     private final ChallengeManager challengeManager;
+    private final EventManager eventManager;
 
     @EventHandler
     public void onEntityDeath(EntityDeathEvent event) {
@@ -29,21 +31,18 @@ public class MobKillEvent implements Listener {
 
         mySqlStorage.getPlayer(killer.getName()).thenAccept(playerData -> {
             if (playerData == null) return;
-
             mySqlStorage.getTasksByPlayer(playerData.getId()).thenAccept(tasks -> {
                 for (Task task : tasks) {
-                    processTask(task, mobType);
+                    processTask(task, mobType, killer);
                 }
             });
         });
     }
 
-    private void processTask(Task task, String mobType) {
-        if (task.getStatus() == Status.COMPLETED) return;
+    private void processTask(Task task, String mobType, Player player) {
+        eventManager.isApplicableTask(task, "kill-mob");
 
-        final ConfigManager.Challenge challenge = challengeManager.getChallengeById(task.getChallengeId());
-        if (challenge == null || !"kill-mob".equals(challenge.getType())) return;
-
+        ConfigManager.Challenge challenge = challengeManager.getChallengeById(task.getChallengeId());
         final Object rawEntities = challenge.getSettings().get("entityType");
         if (!(rawEntities instanceof List<?> targetMobs)) return;
 
@@ -52,45 +51,14 @@ public class MobKillEvent implements Listener {
             if (!(obj instanceof String entityName)) continue;
 
             if (entityName.equalsIgnoreCase(mobTypeUpper)) {
-                int newProgress = task.getProgress() + 1;
-                if (newProgress > challenge.getData().getRequired()) {
-                    newProgress = challenge.getData().getRequired();
-                }
-
-                task.setProgress(newProgress);
-
-                if (newProgress >= challenge.getData().getRequired()) {
-                    task.setStatus(Status.COMPLETED);
-
-                    mySqlStorage.updateTask(task);
-
-                    final String nextId = challenge.getNextChallengeId();
-                    System.out.println(nextId);
-                    if (nextId != null) {
-                        final ConfigManager.Challenge nextChallenge = challengeManager.getChallengeById(nextId);
-                        if (nextChallenge != null) {
-                            final Task nextTask = new Task(
-                                    0,
-                                    task.getPlayerId(),
-                                    nextChallenge.getDisplayName(),
-                                    nextId,
-                                    Status.IN_PROGRESS,
-                                    0
-                            );
-                            mySqlStorage.addTask(nextTask);
-
-                        }else{
-
-                        }
-                    }
-                }else{
-                    mySqlStorage.updateTask(task);
-                }
-
-                break;
+                eventManager.handleProgress(task, challenge, player);
+                challengeManager.setNextChallenge(challenge, task);
+            }else{
+                mySqlStorage.updateTask(task);
             }
         }
     }
+
 
     private String getMobType(Entity entity) {
         if (entity instanceof Zombie) return "zombie";

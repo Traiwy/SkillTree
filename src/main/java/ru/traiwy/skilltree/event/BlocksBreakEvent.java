@@ -15,6 +15,7 @@ import ru.traiwy.skilltree.data.Task;
 import ru.traiwy.skilltree.enums.Status;
 import ru.traiwy.skilltree.manager.ChallengeManager;
 import ru.traiwy.skilltree.manager.ConfigManager;
+import ru.traiwy.skilltree.manager.EventManager;
 import ru.traiwy.skilltree.storage.MySqlStorage;
 
 import java.util.*;
@@ -24,6 +25,7 @@ public class BlocksBreakEvent implements Listener {
     private final ChallengeManager challengeManager;
     private final MySqlStorage mySqlStorage;
     private final JavaPlugin plugin;
+    private final EventManager eventManager;
 
     private final Map<Player, Material> lastBreakBlock = new HashMap<>();
 
@@ -31,6 +33,7 @@ public class BlocksBreakEvent implements Listener {
     public void onBlockBreakEvent(BlockBreakEvent event) {
         final Block block = event.getBlock();
         final Player player = event.getPlayer();
+
 
         if(isWood(block.getType())){
             lastBreakBlock.put(player, block.getType());
@@ -52,50 +55,29 @@ public class BlocksBreakEvent implements Listener {
 
             mySqlStorage.getTasksByPlayer(playerData.getId()).thenAccept(tasks -> {
                 for (Task task : tasks) {
-                    if (task.getStatus() == Status.COMPLETED) continue;
-
+                    eventManager.isApplicableTask(task, "break-sword-on-wood");
                     final ConfigManager.Challenge challenge = challengeManager.getChallengeById(task.getChallengeId());
-                    if (challenge == null || !"break-sword-on-wood".equals(challenge.getType())) continue;
 
-                    final List<Material> materialBlock = getMaterialBlock(task);
-                    final List<Material> materialItem = getMaterialItem(task);
+                    final List<Material> materialBlock = getMaterialBlock(challenge);
+                    final List<Material> materialItem = getMaterialItem(challenge);
+
                     if (materialItem == null || materialBlock == null) continue;
 
                     for (Material materialB : materialBlock) {
                         for (Material materialI : materialItem) {
                             if (materialI == item && materialB == lastBlock) {
-                                int newProgress = Math.min(task.getProgress() + 1, challenge.getData().getRequired());
-                                task.setProgress(newProgress);
+                                eventManager.handleProgress(task, challenge, player);
+                                challengeManager.setNextChallenge(challenge, task);
 
                                 Bukkit.getScheduler().runTask(plugin, () -> {
                                     player.sendMessage("§aТы сломал меч об дерево. Задание выполнено!");
                                 });
 
-                                if (newProgress >= challenge.getData().getRequired()) {
-                                    task.setStatus(Status.COMPLETED);
-                                    mySqlStorage.updateTask(task);
-
-
-                                    String nextId = challenge.getNextChallengeId();
-                                    if (nextId != null) {
-                                        ConfigManager.Challenge next = challengeManager.getChallengeById(nextId);
-                                        if (next != null) {
-                                            Task nextTask = new Task(
-                                                    0,
-                                                    task.getPlayerId(),
-                                                    next.getDisplayName(),
-                                                    nextId,
-                                                    Status.IN_PROGRESS,
-                                                    0
-                                            );
-                                            mySqlStorage.addTask(nextTask);
-                                        }
-                                    }
-                                } else {
-                                    mySqlStorage.updateTask(task);
-                                }
-                                break;
+                            } else {
+                                mySqlStorage.updateTask(task);
                             }
+                            break;
+
                         }
                     }
                 }
@@ -103,11 +85,7 @@ public class BlocksBreakEvent implements Listener {
         });
     }
 
-    public List<Material> getMaterialBlock(Task task){
-        if(task.getStatus() == Status.COMPLETED) return null;
-
-        final ConfigManager.Challenge challenge = challengeManager.getChallengeById(task.getChallengeId());
-        if(challenge == null || !"break-sword-on-wood".equals(challenge.getType())) return null;
+    public List<Material> getMaterialBlock(ConfigManager.Challenge challenge){
 
         final Object rawBlock = challenge.getSettings().get("block");
         if(!(rawBlock instanceof List<?> targetBlockList) ) return null;
@@ -125,11 +103,7 @@ public class BlocksBreakEvent implements Listener {
         return materials.isEmpty() ? null : materials;
     }
 
-    public List<Material> getMaterialItem(Task task) {
-        if (task.getStatus() == Status.COMPLETED) return null;
-
-        final ConfigManager.Challenge challenge = challengeManager.getChallengeById(task.getChallengeId());
-        if (challenge == null || !"break-sword-on-wood".equals(challenge.getType())) return null;
+    public List<Material> getMaterialItem(ConfigManager.Challenge challenge) {
 
         final Object rawItem = challenge.getSettings().get("item");
         if (!(rawItem instanceof List<?> targetItemList)) return null;
@@ -143,7 +117,7 @@ public class BlocksBreakEvent implements Listener {
                 Material mat = Material.valueOf(itemName.toUpperCase());
                 materials.add(mat);
             } catch (IllegalArgumentException e) {
-                System.out.println("§c[SkillTree] Неизвестный предмет в конфиге: " + itemName);
+                System.out.println("§cНеизвестный предмет в конфиге: " + itemName);
             }
         }
 

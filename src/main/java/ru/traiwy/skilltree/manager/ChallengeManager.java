@@ -100,10 +100,10 @@ public class ChallengeManager {
     }
 
     public void setNextChallenge(ConfigManager.Challenge challenge, Task task) {
-        String nextId = challenge.getNextChallengeId();
+        final String nextId = challenge.getNextChallengeId();
 
         if (nextId != null) {
-            ConfigManager.Challenge next = getChallengeById(nextId);
+            final ConfigManager.Challenge next = getChallengeById(nextId);
             if (next != null) {
                 Task nextTask = new Task(
                         0,
