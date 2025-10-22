@@ -10,25 +10,22 @@ import ru.traiwy.skilltree.inv.WarriorMenu;
 public class GuiService implements Listener {
 
     @EventHandler
-    public void on(InventoryClickEvent event){
-        if(event.getInventory().getHolder(false) instanceof WarriorMenu){
+    public void on(InventoryClickEvent event) {
+        if (event.getInventory().getHolder(false) instanceof WarriorMenu wm) {
             onClick(event);
         }
 
-        if(event.getInventory().getHolder(false) instanceof FarmerMenu){
+        if (event.getInventory().getHolder(false) instanceof FarmerMenu) {
             onClick(event);
         }
 
-        if(event.getInventory().getHolder(false) instanceof AlchemistMenu){
+        if (event.getInventory().getHolder(false) instanceof AlchemistMenu) {
             onClick(event);
         }
     }
 
-    @EventHandler
     public void onClick(InventoryClickEvent event) {
-       event.setCancelled(true);
-   }
-
-
+        event.setCancelled(true);
+    }
 
 }

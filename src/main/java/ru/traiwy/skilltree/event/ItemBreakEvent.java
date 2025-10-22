@@ -5,6 +5,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerItemBreakEvent;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -34,13 +35,15 @@ public class ItemBreakEvent implements Listener {
         lastBreakBlock.put(player, blockType);
     }
 
-    @EventHandler
+    @EventHandler(priority =  EventPriority.LOW)
     public void onPlayerItemBreak(PlayerItemBreakEvent event) {
         final Player player = event.getPlayer();
         final Material item = event.getBrokenItem().getType();
 
-        final Material lastBlock = lastBreakBlock.remove(player);
+        final Material lastBlock = lastBreakBlock.get(player);
         if (lastBlock == null) player.sendMessage("блок null");
+
+         lastBreakBlock.remove(player);
 
         mySqlStorage.getPlayer(player.getName()).thenAccept(playerData -> {
             if (playerData == null) return;

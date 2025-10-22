@@ -52,7 +52,7 @@ public final class SkillTree extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new PlayersJoinEvent(mySqlStorage), this);
         getServer().getPluginManager().registerEvents(new BlockHitEvent(challengeManager, mySqlStorage, this, eventManager), this);
         getServer().getPluginManager().registerEvents(new LavaDamageEvent(mySqlStorage, challengeManager, this, eventManager), this);
-        getServer().getPluginManager().registerEvents(new ItemBreakEvent(challengeManager, mySqlStorage, this, eventManager), this);
+        getServer().getPluginManager().registerEvents(itemBreakEvent, this);
         getServer().getPluginManager().registerEvents(new PotionDrinkEvent(mySqlStorage, eventManager, challengeManager), this);
          Bukkit.getPluginManager().registerEvents(new GuiService(), this);
 
