@@ -40,7 +40,7 @@ public class ItemBreakEvent implements Listener {
         final Material item = event.getBrokenItem().getType();
 
         final Material lastBlock = lastBreakBlock.remove(player);
-        if (lastBlock == null) return;
+        if (lastBlock == null) player.sendMessage("блок null");
 
         mySqlStorage.getPlayer(player.getName()).thenAccept(playerData -> {
             if (playerData == null) return;

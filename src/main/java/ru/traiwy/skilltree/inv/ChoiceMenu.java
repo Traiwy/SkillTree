@@ -90,7 +90,7 @@ public class ChoiceMenu implements InventoryHolder, Listener {
             switch (item.getType()) {
                 case IRON_SWORD -> {
                     giveFirstChallengeToPlayer(player, "warrior", Skill.WARRIOR);
-                   ;mySqlStorage.updatePlayer(new PlayerData(player.getName(), Skill.WARRIOR, 0));
+                    mySqlStorage.updatePlayer(new PlayerData(player.getName(), Skill.WARRIOR, 0));
                     warriorMenu.openInventory(player);
                 }
                 case WHEAT -> {

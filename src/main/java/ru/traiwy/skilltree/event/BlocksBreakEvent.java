@@ -6,6 +6,7 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.player.PlayerItemBreakEvent;
@@ -27,17 +28,19 @@ public class BlocksBreakEvent implements Listener {
     private final MySqlStorage mySqlStorage;
     private final JavaPlugin plugin;
     private final EventManager eventManager;
+    private final ItemBreakEvent itemBreakEvent;
 
 
-    @EventHandler
+    @EventHandler (priority = EventPriority.HIGHEST)
     public void onBlockBreak(BlockBreakEvent event) {
         final Block block = event.getBlock();
         final Material brokenType = event.getBlock().getType();
         final Player player = event.getPlayer();
         player.sendMessage("Сломанный блок: " + brokenType);
 
-
-
+        if (isWood(brokenType)) {
+            itemBreakEvent.addLastBrokenBlock(player, brokenType);
+        }
 
         mySqlStorage.getPlayer(player.getName()).thenAccept(playerData -> {
             if (playerData == null) return;
@@ -70,6 +73,11 @@ public class BlocksBreakEvent implements Listener {
         });
     }
 
-
+     private boolean isWood(Material mat) {
+        return switch (mat) {
+            case OAK_LOG, SPRUCE_LOG, BIRCH_LOG, JUNGLE_LOG, DARK_OAK_LOG, ACACIA_LOG, CHERRY_LOG -> true;
+            default -> false;
+        };
+    }
 
 }

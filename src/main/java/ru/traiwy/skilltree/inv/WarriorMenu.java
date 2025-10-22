@@ -29,7 +29,7 @@ public class WarriorMenu implements InventoryHolder, Listener {
         return inventory;
     }
 
-    public void build(Player player){
+    private void build(Player player){
         panelManager.setPanels(player, Skill.WARRIOR, inventory);
         panelManager.fillPanelSlots(inventory, new ItemStack(Material.GRAY_STAINED_GLASS_PANE));
          itemManager.parseHead(player).thenAccept(head -> {
@@ -39,23 +39,6 @@ public class WarriorMenu implements InventoryHolder, Listener {
         });
     });
 }
-
-
-
-   @EventHandler
-    public void onClickInventoryPlayer(InventoryClickEvent event) {
-       final Player player = (Player) event.getWhoClicked();
-       final Inventory inv = event.getInventory();
-       final ItemStack item = event.getCurrentItem();
-
-
-       if (inv == null &&
-               inv.getHolder() == null &&
-               !(inv.getHolder() instanceof WarriorMenu) &&
-               (item == null || item.getType() == Material.AIR)) return;
-       event.setCancelled(true);
-
-   }
 
     public void openInventory(Player player) {
         build(player);
