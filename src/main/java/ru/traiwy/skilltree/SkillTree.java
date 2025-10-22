@@ -35,6 +35,9 @@ public final class SkillTree extends JavaPlugin {
         final FarmerMenu farmerMenuHolder = new FarmerMenu(panelManager, configManager);
         final AlchemistMenu alchemistMenu = new AlchemistMenu(panelManager);
 
+        final ItemBreakEvent itemBreakEvent = new ItemBreakEvent(challengeManager, mySqlStorage, this, eventManager);
+
+
         final ChoiceMenu choiceMenu = new ChoiceMenu(
                 warriorMenu,
                 farmerMenuHolder,
@@ -48,6 +51,9 @@ public final class SkillTree extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new PlayersJoinEvent(mySqlStorage), this);
         getServer().getPluginManager().registerEvents(new BlockHitEvent(challengeManager, mySqlStorage, this, eventManager), this);
         getServer().getPluginManager().registerEvents(new LavaDamageEvent(mySqlStorage, challengeManager, this, eventManager), this);
+        getServer().getPluginManager().registerEvents(new ItemBreakEvent(challengeManager, mySqlStorage, this, eventManager), this);
+        getServer().getPluginManager().registerEvents(new BlocksDamageEvent(itemBreakEvent), this);
+
 
     }
 

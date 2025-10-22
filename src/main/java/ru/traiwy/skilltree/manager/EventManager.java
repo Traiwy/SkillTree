@@ -26,6 +26,7 @@ public class EventManager {
         task.setProgress(newProgress);
         if (newProgress >= required) {
             task.setStatus(Status.COMPLETED);
+            player.sendMessage("Задание выполнено! Чтобы посмотреть следующее задание используй /skilltree start");
         }
 
         mySqlStorage.updateTask(task);

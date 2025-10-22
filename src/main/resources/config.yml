@@ -115,7 +115,7 @@ challenges:
     displayName: "Исследователь пещер"
     nextChallengeId: "warrior_task9"
     settings:
-      item:
+      block:
         - DIAMOND_ORE
       yLevel: 20
     metadata: null
