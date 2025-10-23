@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Set;
 
 @AllArgsConstructor
-public class EntityPotionDamageEvent implements Listener {
+public class PotionDamageEvent implements Listener {
     private final EventManager eventManager;
     private final JavaPlugin plugin;
     private final  MySqlStorage mySqlStorage;

@@ -259,8 +259,8 @@ challenges:
       required: 1
     displayName: "Алхимический снайпер"
     settings:
-      potionType:
-        - HARMING
+      potionEffect:
+        - HARM
     metadata: null
 
   # === FARMER ===
