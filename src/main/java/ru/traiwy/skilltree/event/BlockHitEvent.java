@@ -31,7 +31,6 @@ public class BlockHitEvent implements Listener {
     public void onBlockHitEvent(ProjectileHitEvent event) {
         if (!(event.getEntity() instanceof Arrow arrow)) return;
         if (!(arrow.getShooter() instanceof Player player)) return;
-        ;
 
         final Block hitBlock = event.getHitBlock();
 
@@ -40,37 +39,36 @@ public class BlockHitEvent implements Listener {
             if (playerData == null) return;
 
             mySqlStorage.getTasksByPlayer(playerData.getId()).thenAccept(tasks -> {
-                for (Task task : tasks) {
-                    eventManager.isApplicableTask(task, "bow-hit");
-                    final ConfigManager.Challenge challenge = challengeManager.getChallengeById(task.getChallengeId());
+                Bukkit.getScheduler().runTask(plugin, () -> {
+                    for (Task task : tasks) {
+                        if (!eventManager.isApplicableTask(task, "bow-hit")) continue;
 
-                    final double playerDistance = player.getLocation().distance(hitBlock.getLocation());
-                    final int distance = getDistance(challenge);
+                        final ConfigManager.Challenge challenge = challengeManager.getChallengeById(task.getChallengeId());
+                        if (challenge == null) continue;
 
-                    if (playerDistance >= distance) {
-                        eventManager.handleProgress(task, challenge, player);
-                        if(task.getStatus() == Status.COMPLETED) {
-                            challengeManager.setNextChallenge(challenge, task);
+                        final int distance = getDistance(challenge);
+                        final double playerDistance = player.getEyeLocation().distance(
+                                hitBlock.getLocation().add(0.5, 0.5, 0.5)
+                        );
+
+                        if (playerDistance >= distance) {
+                            eventManager.handleProgress(task, challenge, player);
+                            if (task.getStatus() == Status.COMPLETED) {
+                                challengeManager.setNextChallenge(challenge, task);
+                                player.sendMessage("§aТы попал!");
+                            }
+                        } else {
+                            player.sendMessage("§cНе попал!");
                         }
-
-                        Bukkit.getScheduler().runTask(plugin, () -> {
-                            player.sendMessage("Ты попал");
-                        });
-
-                    } else {
-                        mySqlStorage.updateTask(task);
-                        Bukkit.getScheduler().runTask(plugin, () -> {
-                            player.sendMessage("Не попал");
-                        });
                     }
-                }
+                });
             });
-        });
 
-    }{}
+        });
+    }
+
 
     public int getDistance(ConfigManager.Challenge challenge) {
-
         Object value = challenge.getSettings().get("distance");
         if (value instanceof Number num) {
             return num.intValue();

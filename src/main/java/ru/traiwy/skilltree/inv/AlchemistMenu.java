@@ -10,7 +10,9 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.java.JavaPlugin;
 import ru.traiwy.skilltree.enums.Skill;
+import ru.traiwy.skilltree.manager.ItemManager;
 import ru.traiwy.skilltree.manager.PanelManager;
 import ru.traiwy.skilltree.util.ItemMetaUtils;
 
@@ -20,56 +22,31 @@ import java.util.Collections;
 @AllArgsConstructor
 public class AlchemistMenu implements InventoryHolder, Listener {
     private final PanelManager panelManager;
+    private final ItemManager itemManager;
+    private final JavaPlugin plugin;
+
     private final Inventory inventory = Bukkit.createInventory(this, 54, "Путь алхимика");
 
-    private void setupInventory(Player player){
-        inventory.close();
-
-        
-
-        final ItemStack playerHead = new ItemStack(Material.PLAYER_HEAD);
-        final ItemStack paper = new ItemStack(Material.PAPER);
-
-        ItemMetaUtils.applyItemMeta(
-                playerHead,
-                "Ваш никнейм: " + player.getName(),
-                Collections.singletonList("Ваш класс: " + Skill.ALCHEMIST.name()));
-
-        ItemMetaUtils.applyItemMeta(
-                paper,
-                "Ваши способности: ",
-                Collections.singletonList("Создавать зелья")
-        );
-
-        inventory.setItem(10, playerHead);
-        inventory.setItem(11, paper);
-
+    private void build(Player player) {
+        panelManager.setPanels(player, Skill.ALCHEMIST, inventory);
+        panelManager.fillPanelSlots(inventory, new ItemStack(Material.GRAY_STAINED_GLASS_PANE));
+        itemManager.parseHead(player).thenAccept(head -> {
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                inventory.setItem(10, head);
+                player.updateInventory();
+            });
+        });
     }
+
 
     @Override
     public Inventory getInventory() {
         return inventory;
     }
 
-    @EventHandler
-    public void onClickInventoryPlayer(InventoryClickEvent event) {
-         final Player player = (Player) event.getWhoClicked();
-        final ItemStack item = event.getCurrentItem();
-
-        if(inventory.getHolder() ==  this){
-            event.setCancelled(true);
-        }
-        if(item.getType() ==  Material.GREEN_STAINED_GLASS_PANE){
-            player.sendMessage("Вы получили награду");
-        }
-    }
     public void openInventory(Player player){
-        setupInventory(player);
-        panelManager.setPanels(player, Skill.ALCHEMIST, inventory);
-        panelManager.fillPanelSlots(inventory, new ItemStack(Material.BLACK_STAINED_GLASS_PANE));
+        build(player);
         player.openInventory(inventory);
 
-
     }
-
 }

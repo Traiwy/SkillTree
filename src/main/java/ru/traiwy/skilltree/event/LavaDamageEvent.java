@@ -16,9 +16,7 @@ import ru.traiwy.skilltree.manager.ConfigManager;
 import ru.traiwy.skilltree.manager.EventManager;
 import ru.traiwy.skilltree.storage.MySqlStorage;
 
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @Slf4j
@@ -29,7 +27,7 @@ public class LavaDamageEvent implements Listener {
     private final JavaPlugin plugin;
     private final EventManager eventManager;
 
-    private final Set<Player> lavaPlayer = new HashSet<>();
+     private final Set<Player> lavaPlayer = new HashSet<>();
 
     @EventHandler
     public void onLavaDamage(EntityDamageEvent event){
@@ -54,7 +52,7 @@ public class LavaDamageEvent implements Listener {
         lavaPlayer.remove(event.getPlayer());
     }
 
-    public void handleLavaSurvive(Player player){
+    private void handleLavaSurvive(Player player){
         mySqlStorage.getPlayer(player.getName()).thenAccept(playerData -> {
             if (playerData == null) return;
             final int playerId = playerData.getId();
@@ -71,18 +69,8 @@ public class LavaDamageEvent implements Listener {
                     if(task.getStatus() == Status.COMPLETED) {
                         challengeManager.setNextChallenge(challenge, task);
                     }
-                    Bukkit.getScheduler().runTask(plugin, () ->
-                            player.sendMessage("§aВы выжили после купания в лаве!")
-                    );
                 }
             });
         });
     }
 }
-
-
-
-
-
-
-

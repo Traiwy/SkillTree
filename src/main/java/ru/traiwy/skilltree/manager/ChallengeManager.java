@@ -1,6 +1,7 @@
 package ru.traiwy.skilltree.manager;
 
 
+import org.bukkit.Bukkit;
 import ru.traiwy.skilltree.data.Task;
 import ru.traiwy.skilltree.enums.Status;
 import ru.traiwy.skilltree.storage.MySqlStorage;
@@ -30,7 +31,6 @@ public class ChallengeManager {
         return configManager.getById(id);
     }
 
-
     public ConfigManager.Challenge getFirstChallengeForClass(String classPrefix) {
         for (ConfigManager.Challenge challenge : getAllChallenges()) {
             if (challenge.getId().startsWith(classPrefix)) {
@@ -40,46 +40,6 @@ public class ChallengeManager {
         return null;
     }
 
-    public ConfigManager.Challenge getNextChallenge(String currentChallengeId) {
-        ConfigManager.Challenge current = getChallengeById(currentChallengeId);
-        if (current == null || current.getNextChallengeId() == null) return null;
-        return getChallengeById(current.getNextChallengeId());
-    }
-
-    public List<ConfigManager.Challenge> getChallengesByType(String type) {
-        return getAllChallenges().stream()
-                .filter(challenge -> type.equalsIgnoreCase(challenge.getType()))
-                .collect(Collectors.toList());
-    }
-
-
-    public Map<String, Object> getSettings(String id) {
-        ConfigManager.Challenge challenge = getChallengeById(id);
-        return (challenge != null) ? challenge.getSettings() : null;
-    }
-
-
-    public Map<String, Object> getMetadata(String id) {
-        ConfigManager.Challenge challenge = getChallengeById(id);
-        return (challenge != null) ? challenge.getMetadata() : null;
-    }
-
-
-    public ConfigManager.ChallengeData getData(String id) {
-        ConfigManager.Challenge challenge = getChallengeById(id);
-        return (challenge != null) ? challenge.getData() : null;
-    }
-
-
-    public String getDisplayName(String id) {
-        ConfigManager.Challenge challenge = getChallengeById(id);
-        return (challenge != null) ? challenge.getDisplayName() : null;
-    }
-
-    public List<String> getGoal(String id) {
-        ConfigManager.Challenge challenge = getChallengeById(id);
-        return (challenge != null) ? challenge.getGoal() : null;
-    }
 
     public List<String> getAllId() {
         List<String> ids = new ArrayList<>();
@@ -104,6 +64,7 @@ public class ChallengeManager {
 
         if (nextId != null) {
             final ConfigManager.Challenge next = getChallengeById(nextId);
+            System.out.println(next);
             if (next != null) {
                 Task nextTask = new Task(
                         0,

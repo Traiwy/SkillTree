@@ -115,7 +115,7 @@ challenges:
     displayName: "Исследователь пещер"
     nextChallengeId: "warrior_task9"
     settings:
-      item:
+      block:
         - DIAMOND_ORE
       yLevel: 20
     metadata: null
@@ -138,24 +138,26 @@ challenges:
   - type: "brew-potion"
     id: "alchemist_task1"
     goal:
-      - "Сварить зелье исцеления"
+      - "Выпить зелье регенерации"
     data:
       current: 0
       required: 1
     displayName: "Начинающий алхимик"
+    nextChallengeId: "alchemist_task2"
     settings:
       potionType:
-        - HEALING
+        - REGEN
     metadata: null
 
   - type: "brew-potion"
     id: "alchemist_task2"
     goal:
-      - "Сварить зелье силы II"
+      - "Выпить зелье силы II"
     data:
       current: 0
-      required: 1
+      required: 3
     displayName: "Опытный алхимик"
+    nextChallengeId: "alchemist_task3"
     settings:
       potionType:
         - STRENGTH
@@ -165,11 +167,12 @@ challenges:
   - type: "brew-potion"
     id: "alchemist_task3"
     goal:
-      - "Сварить зелье невидимости"
+      - "Выпить зелья невидимости"
     data:
       current: 0
-      required: 1
+      required: 10
     displayName: "Мастер алхимии"
+    nextChallengeId: "alchemist_task4"
     settings:
       potionType:
         - INVISIBILITY
@@ -178,80 +181,86 @@ challenges:
   - type: "brew-potion"
     id: "alchemist_task4"
     goal:
-      - "Сварить зелье ночного зрения"
+      - "Выпить зелье ночного зрения"
     data:
       current: 0
-      required: 1
+      required: 5
     displayName: "Зельевар"
+    nextChallengeId: "alchemist_task5"
     settings:
       potionType:
         - NIGHT_VISION
     metadata: null
 
-  - type: "brew-potion"
+  - type: "survive"
     id: "alchemist_task5"
     goal:
-      - "Сварить зелье яда II"
+      - "Использовать на себе зелье яда и выжить"
     data:
       current: 0
       required: 1
     displayName: "Токсиколог"
+    nextChallengeId: "alchemist_task6"
     settings:
-      potionType:
+      condition:
         - POISON
-      level: 2
     metadata: null
 
   - type: "brew-potion"
     id: "alchemist_task6"
     goal:
-      - "Сварить зелье регенерации II"
+      - "Выпить регенерации II"
     data:
       current: 0
-      required: 1
+      required: 3
     displayName: "Эликсир жизни"
+    nextChallengeId: "alchemist_task7"
     settings:
       potionType:
         - REGENERATION
       level: 2
     metadata: null
 
-  - type: "brew-modified-potion"
+  - type: "brew-potion"
     id: "alchemist_task7"
     goal:
-      - "Создать зелье с помощью модификатора (например, удлинение или усиление)"
+      - "Выпить редкое зелье черепаховой силы"
     data:
       current: 0
       required: 1
-    displayName: "Алхимик-исследователь"
+    displayName: "Черепаховый алхимик"
+    nextChallengeId: "alchemist_task8"
     settings:
-      modifiers:
-        - LONG
-        - STRONG
+      potionType:
+        - TURTLE_MASTER
     metadata: null
 
-  - type: "brew-all-potions"
+  - type: "brew-combo-potion"
     id: "alchemist_task8"
     goal:
-      - "Сварить все виды зелий в игре"
+      - "Выпей два зелья подряд: силы и скорости"
     data:
       current: 0
       required: 1
-    displayName: "Мастер зелий"
-    settings: {}
+    displayName: "Эликсир синергии"
+    nextChallengeId: "alchemist_task9"
+    settings:
+      combo:
+        - STRENGTH
+        - SPEED
     metadata: null
 
-  - type: "brew-custom-potion"
+  - type: "brew-throw-harming"
     id: "alchemist_task9"
     goal:
-      - "Сварить зелье с эффектом, которого нет в стандартной игре (например, зелье левитации)"
+      - "Попасть взрывным зельем вреда по мобу"
     data:
       current: 0
       required: 1
-    displayName: "Легендарный алхимик"
+    displayName: "Алхимический снайпер"
     settings:
-      potionEffect:
-        - LEVITATION
+      potionType:
+        - HARMING
     metadata: null
 
   # === FARMER ===
