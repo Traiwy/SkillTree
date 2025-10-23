@@ -31,7 +31,6 @@ public class ChallengeManager {
         return configManager.getById(id);
     }
 
-
     public ConfigManager.Challenge getFirstChallengeForClass(String classPrefix) {
         for (ConfigManager.Challenge challenge : getAllChallenges()) {
             if (challenge.getId().startsWith(classPrefix)) {
@@ -65,6 +64,7 @@ public class ChallengeManager {
 
         if (nextId != null) {
             final ConfigManager.Challenge next = getChallengeById(nextId);
+            System.out.println(next);
             if (next != null) {
                 Task nextTask = new Task(
                         0,

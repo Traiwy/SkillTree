@@ -19,10 +19,12 @@ import ru.traiwy.skilltree.storage.MySqlStorage;
 import java.util.*;
 
 @AllArgsConstructor
-public class PotionDrinkEvent implements Listener {
+public class ComboPotionDrinkEvent implements Listener {
     private final MySqlStorage mySqlStorage;
     private final EventManager eventManager;
     private final ChallengeManager challengeManager;
+
+    private final Map<Player, Set<String>> playerPotions = new HashMap<>();
 
 
     @EventHandler
@@ -35,46 +37,35 @@ public class PotionDrinkEvent implements Listener {
 
 
         final PotionData data = meta.getBasePotionData();
+        final String potionName = data.getType().name();
         final PotionType type = data.getType();
 
-        final int potionLevel = data.isUpgraded() ? 2 : 1;
+        Set<String> drankPotions = playerPotions.computeIfAbsent(player, k -> new HashSet<>());
+        drankPotions.add(potionName);
 
         mySqlStorage.getPlayer(player.getName()).thenAccept(playerData -> {
-            if (playerData == null) return;
-
             mySqlStorage.getTasksByPlayer(playerData.getId()).thenAccept(tasks -> {
                 for (Task task : tasks) {
-                    if (!eventManager.isApplicableTask(task, "brew-potion")) continue;
+                    if (!(eventManager.isApplicableTask(task, "brew-combo-potion"))) continue;
 
                     final ConfigManager.Challenge challenge = challengeManager.getChallengeById(task.getChallengeId());
                     if (challenge == null) continue;
+                    final Object comboObj = challenge.getSettings().get("combo");
+                    if (!(comboObj instanceof List<?> comboPotions)) continue;
 
-                    final Object potionObj = challenge.getSettings().get("potionType");
-                    final Object levelObj = challenge.getSettings().get("level");
-                    if (!(potionObj instanceof List<?> requiredPotions)) continue;
+                    boolean allDrank = comboPotions.stream()
+                            .allMatch(p -> drankPotions.contains(p.toString()));
+                    System.out.println(allDrank);
 
-
-                    Integer requiredLevel = (levelObj instanceof Number) ? ((Number) levelObj).intValue() : 1;
-
-                    if (requiredPotions.stream().anyMatch(p -> p.toString().equalsIgnoreCase(type.name()))) {
+                    if (allDrank) {
                         eventManager.handleProgress(task, challenge, player);
-
                         if (task.getStatus() == Status.COMPLETED) {
                             challengeManager.setNextChallenge(challenge, task);
-                            return;
                         }
-                    }
-                    if (potionLevel == requiredLevel) {
-                        eventManager.handleProgress(task, challenge, player);
-
-                        if (task.getStatus() == Status.COMPLETED) {
-                            challengeManager.setNextChallenge(challenge, task);
-                            return;
-                        }
+                        drankPotions.clear();
                     }
                 }
             });
         });
     }
-
 }

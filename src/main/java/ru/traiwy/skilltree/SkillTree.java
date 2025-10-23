@@ -1,5 +1,6 @@
 package ru.traiwy.skilltree;
 
+import org.bukkit.Bukkit;
 import ru.traiwy.skilltree.command.AdminCommand;
 import ru.traiwy.skilltree.event.*;
 import ru.traiwy.skilltree.inv.AlchemistMenu;
@@ -21,7 +22,8 @@ public final class SkillTree extends JavaPlugin {
         saveResource("bd.yml", false);
         final ConfigManager configManager = new ConfigManager(this);
         configManager.load(getConfig());
-        final MySqlStorage mySqlStorage = new MySqlStorage();
+
+        final MySqlStorage mySqlStorage = new MySqlStorage(this);
         mySqlStorage.initDatabase();
 
 
@@ -47,18 +49,15 @@ public final class SkillTree extends JavaPlugin {
         getCommand("skilltree").setExecutor(new AdminCommand(this, mySqlStorage, choiceMenu, warriorMenu, farmerMenuHolder, alchemistMenu));
         getServer().getPluginManager().registerEvents(choiceMenu, this);
         getServer().getPluginManager().registerEvents(new MobKillEvent(mySqlStorage, configManager, challengeManager, eventManager), this);
-        getServer().getPluginManager().registerEvents(new BlocksBreakEvent(challengeManager, mySqlStorage, this,eventManager, itemBreakEvent), this);
+        getServer().getPluginManager().registerEvents(new BlocksBreakEvent(challengeManager, mySqlStorage, this, eventManager, itemBreakEvent), this);
         getServer().getPluginManager().registerEvents(new PlayersJoinEvent(mySqlStorage), this);
         getServer().getPluginManager().registerEvents(new BlockHitEvent(challengeManager, mySqlStorage, this, eventManager), this);
         getServer().getPluginManager().registerEvents(new LavaDamageEvent(mySqlStorage, challengeManager, this, eventManager), this);
         getServer().getPluginManager().registerEvents(itemBreakEvent, this);
         getServer().getPluginManager().registerEvents(new PotionDrinkEvent(mySqlStorage, eventManager, challengeManager), this);
-         getServer().getPluginManager().registerEvents(new GuiService(), this);
-         getServer().getPluginManager().registerEvents(new EntityPotionDamageEvent(eventManager, this), this);
-
-
+        getServer().getPluginManager().registerEvents(new GuiService(), this);
+        getServer().getPluginManager().registerEvents(new EntityPotionDamageEvent(eventManager, this, mySqlStorage, challengeManager), this);
+        getServer().getPluginManager().registerEvents(new ComboPotionDrinkEvent(mySqlStorage, eventManager,challengeManager), this);
     }
-
-
 
 }

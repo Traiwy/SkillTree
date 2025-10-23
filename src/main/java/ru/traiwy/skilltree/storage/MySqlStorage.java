@@ -2,6 +2,8 @@ package ru.traiwy.skilltree.storage;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import org.bukkit.Bukkit;
+import org.bukkit.plugin.java.JavaPlugin;
 import ru.traiwy.skilltree.data.PlayerData;
 import ru.traiwy.skilltree.data.Task;
 import ru.traiwy.skilltree.enums.Skill;
@@ -15,15 +17,20 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+
 public class MySqlStorage implements Storage {
     private HikariDataSource dataSource;
+    private final JavaPlugin plugin;
     private final ExecutorService executorService = Executors.newFixedThreadPool(2);
 
-    public MySqlStorage() {
-        setupDataSource();
+    public MySqlStorage(JavaPlugin plugin) {
+        this.plugin = plugin;
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            setupDataSource();
+        });
     }
 
-    private void setupDataSource() {
+    public void setupDataSource() {
         final String url = "jdbc:mysql://" + ConfigManager.MySQL.HOST + ":" +
                 ConfigManager.MySQL.PORT + "/" + ConfigManager.MySQL.DATABASE;
 
@@ -44,6 +51,7 @@ public class MySqlStorage implements Storage {
         dataSource = new HikariDataSource(config);
         initDatabase();
     }
+
 
     public void initDatabase() {
         CompletableFuture.runAsync(() -> {

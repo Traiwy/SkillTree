@@ -222,7 +222,7 @@ challenges:
     metadata: null
 
   - type: "brew-potion"
-    id: "alchemist_task13"
+    id: "alchemist_task7"
     goal:
       - "Выпить редкое зелье черепаховой силы"
     data:
@@ -236,7 +236,7 @@ challenges:
     metadata: null
 
   - type: "brew-combo-potion"
-    id: "alchemist_task14"
+    id: "alchemist_task8"
     goal:
       - "Выпей два зелья подряд: силы и скорости"
     data:
@@ -251,7 +251,7 @@ challenges:
     metadata: null
 
   - type: "brew-throw-harming"
-    id: "alchemist_task15"
+    id: "alchemist_task9"
     goal:
       - "Попасть взрывным зельем вреда по мобу"
     data:
