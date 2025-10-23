@@ -143,6 +143,7 @@ challenges:
       current: 0
       required: 1
     displayName: "Начинающий алхимик"
+    nextChallengeId: "alchemist_task2"
     settings:
       potionType:
         - REGEN
@@ -156,6 +157,7 @@ challenges:
       current: 0
       required: 3
     displayName: "Опытный алхимик"
+    nextChallengeId: "alchemist_task3"
     settings:
       potionType:
         - STRENGTH
@@ -170,6 +172,7 @@ challenges:
       current: 0
       required: 10
     displayName: "Мастер алхимии"
+    nextChallengeId: "alchemist_task4"
     settings:
       potionType:
         - INVISIBILITY
@@ -183,23 +186,24 @@ challenges:
       current: 0
       required: 5
     displayName: "Зельевар"
+    nextChallengeId: "alchemist_task5"
     settings:
       potionType:
         - NIGHT_VISION
     metadata: null
 
-  - type: "brew-potion"
+  - type: "survive"
     id: "alchemist_task5"
     goal:
-      - "Использовать на себе зелье яда II и выжить"
+      - "Использовать на себе зелье яда и выжить"
     data:
       current: 0
       required: 1
     displayName: "Токсиколог"
+    nextChallengeId: "alchemist_task6"
     settings:
-      potionType:
+      condition:
         - POISON
-      level: 2
     metadata: null
 
   - type: "brew-potion"
@@ -210,6 +214,7 @@ challenges:
       current: 0
       required: 3
     displayName: "Эликсир жизни"
+    nextChallengeId: "alchemist_task7"
     settings:
       potionType:
         - REGENERATION
@@ -224,6 +229,7 @@ challenges:
       current: 0
       required: 1
     displayName: "Черепаховый алхимик"
+    nextChallengeId: "alchemist_task8"
     settings:
       potionType:
         - TURTLE_MASTER
@@ -237,6 +243,7 @@ challenges:
       current: 0
       required: 1
     displayName: "Эликсир синергии"
+    nextChallengeId: "alchemist_task9"
     settings:
       combo:
         - STRENGTH

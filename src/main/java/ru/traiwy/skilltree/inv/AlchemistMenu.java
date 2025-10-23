@@ -44,17 +44,6 @@ public class AlchemistMenu implements InventoryHolder, Listener {
         return inventory;
     }
 
-    @EventHandler
-    public void onClickInventoryPlayer(InventoryClickEvent event) {
-        final Inventory inv = event.getClickedInventory();
-        final ItemStack item = event.getCurrentItem();
-
-        if (inv != null && item != null && inv.getHolder() instanceof WarriorMenu) {
-          event.setCancelled(true);
-      }
-
-    }
-
     public void openInventory(Player player){
         build(player);
         player.openInventory(inventory);

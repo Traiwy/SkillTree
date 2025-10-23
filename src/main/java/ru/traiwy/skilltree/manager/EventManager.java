@@ -6,6 +6,8 @@ import ru.traiwy.skilltree.data.Task;
 import ru.traiwy.skilltree.enums.Status;
 import ru.traiwy.skilltree.storage.MySqlStorage;
 
+import java.util.List;
+
 @AllArgsConstructor
 public class EventManager {
     private final ChallengeManager challengeManager;
@@ -31,4 +33,36 @@ public class EventManager {
 
         mySqlStorage.updateTask(task);
     }
+
+     public void updateChallengeProgress(Player player, String typeConfig, String type, String typeSettings) {
+         mySqlStorage.getPlayer(player.getName()).thenAccept(playerData -> {
+             mySqlStorage.getTasksByPlayer(playerData.getId()).thenAccept(tasks -> {
+                 for (Task task : tasks) {
+                     if (!(isApplicableTask(task, typeConfig))) continue;
+
+                     final ConfigManager.Challenge challenge = challengeManager.getChallengeById(task.getChallengeId());
+                     if (challenge == null) continue;
+                     final Object condition = challenge.getSettings().get(type);
+                     boolean matches = false;
+
+                     if (condition instanceof List<?> list) {
+                         matches = list.stream().anyMatch(o ->
+                                 o != null && o.toString().equalsIgnoreCase(typeSettings));
+                     } else if (condition instanceof String str) {
+                         matches = str.equalsIgnoreCase(typeSettings);
+                     }
+
+                     if (!matches) continue;
+
+                     handleProgress(task, challenge, player);
+                     if (task.getStatus() == Status.COMPLETED) {
+                         challengeManager.setNextChallenge(challenge, task);
+                     }
+
+                 }
+             });
+         });
+     }
+
+
 }

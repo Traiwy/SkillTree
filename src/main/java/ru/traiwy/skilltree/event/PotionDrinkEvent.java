@@ -28,7 +28,7 @@ public class PotionDrinkEvent implements Listener {
     private final ChallengeManager challengeManager;
 
     @EventHandler
-     public void onPotionDrink(PlayerItemConsumeEvent event) {
+    public void onPotionDrink(PlayerItemConsumeEvent event) {
         final Player player = event.getPlayer();
         final ItemStack item = event.getItem();
 
@@ -39,6 +39,8 @@ public class PotionDrinkEvent implements Listener {
         final PotionData data = meta.getBasePotionData();
         final PotionType type = data.getType();
 
+        final int potionLevel = data.isUpgraded() ? 2 : 1;
+
         mySqlStorage.getPlayer(player.getName()).thenAccept(playerData -> {
             if (playerData == null) return;
 
@@ -46,17 +48,28 @@ public class PotionDrinkEvent implements Listener {
                 for (Task task : tasks) {
                     if (!eventManager.isApplicableTask(task, "brew-potion")) continue;
 
-                    ConfigManager.Challenge challenge = challengeManager.getChallengeById(task.getChallengeId());
+                    final ConfigManager.Challenge challenge = challengeManager.getChallengeById(task.getChallengeId());
                     if (challenge == null) continue;
 
-                    Object potionObj = challenge.getSettings().get("potionType");
+                    final Object potionObj = challenge.getSettings().get("potionType");
+                    final Object levelObj = challenge.getSettings().get("level");
                     if (!(potionObj instanceof List<?> requiredPotions)) continue;
+                    Integer requiredLevel = (levelObj instanceof Number) ? ((Number) levelObj).intValue() : 1;
 
                     if (requiredPotions.stream().anyMatch(p -> p.toString().equalsIgnoreCase(type.name()))) {
                         eventManager.handleProgress(task, challenge, player);
 
                         if (task.getStatus() == Status.COMPLETED) {
                             challengeManager.setNextChallenge(challenge, task);
+                            return;
+                        }
+                    }
+                    if (potionLevel == requiredLevel) {
+                        eventManager.handleProgress(task, challenge, player);
+
+                        if (task.getStatus() == Status.COMPLETED) {
+                            challengeManager.setNextChallenge(challenge, task);
+                            return;
                         }
                     }
                 }

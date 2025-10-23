@@ -1,6 +1,5 @@
 package ru.traiwy.skilltree;
 
-import org.bukkit.Bukkit;
 import ru.traiwy.skilltree.command.AdminCommand;
 import ru.traiwy.skilltree.event.*;
 import ru.traiwy.skilltree.inv.AlchemistMenu;
@@ -54,7 +53,8 @@ public final class SkillTree extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new LavaDamageEvent(mySqlStorage, challengeManager, this, eventManager), this);
         getServer().getPluginManager().registerEvents(itemBreakEvent, this);
         getServer().getPluginManager().registerEvents(new PotionDrinkEvent(mySqlStorage, eventManager, challengeManager), this);
-         Bukkit.getPluginManager().registerEvents(new GuiService(), this);
+         getServer().getPluginManager().registerEvents(new GuiService(), this);
+         getServer().getPluginManager().registerEvents(new EntityPotionDamageEvent(eventManager, this), this);
 
 
     }
