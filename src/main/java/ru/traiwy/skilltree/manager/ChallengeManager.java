@@ -2,7 +2,10 @@ package ru.traiwy.skilltree.manager;
 
 
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
+import ru.traiwy.skilltree.data.PlayerData;
 import ru.traiwy.skilltree.data.Task;
+import ru.traiwy.skilltree.enums.Skill;
 import ru.traiwy.skilltree.enums.Status;
 import ru.traiwy.skilltree.storage.MySqlStorage;
 
@@ -77,5 +80,30 @@ public class ChallengeManager {
                 mySqlStorage.addTask(nextTask);
             }
         }
+    }
+    public void giveFirstChallengeToPlayer(Player player, String classPrefix, Skill skill) {
+        mySqlStorage.getPlayer(player.getName()).thenAccept(playerData -> {
+            if (playerData == null) {
+                PlayerData newPlayer = new PlayerData(player.getName(), skill, 0);
+                mySqlStorage.addPlayer(newPlayer);
+                mySqlStorage.getPlayer(player.getName()).thenAccept(addedPlayer -> {
+                    if (addedPlayer != null) {
+                        giveTask(addedPlayer, classPrefix);
+                    }
+                });
+            } else {
+                giveTask(playerData, classPrefix);
+            }
+        });
+    }
+    private void giveTask(PlayerData playerData, String classPrefix) {
+        ConfigManager.Challenge challenge = getFirstChallengeForClass(classPrefix);
+        if (challenge == null) {
+            System.out.println("challenge == null");
+            return;
+        }
+
+        Task task = new Task(0, playerData.getId(), challenge.getDisplayName(), challenge.getId(), Status.IN_PROGRESS, 0);
+        mySqlStorage.addTask(task);
     }
 }

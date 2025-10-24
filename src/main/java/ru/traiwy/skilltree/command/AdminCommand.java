@@ -90,9 +90,9 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
                 p.getScheduler().run(plugin, task -> {
                     Skill skill = playerData.getSkill();
                     switch (skill) {
-                        case WARRIOR -> warriorMenu.openInventory(p);
-                        case FARMER -> farmerMenu.openInventory(p);
-                        case ALCHEMIST -> alchemistMenu.openInventory(p);
+                        case WARRIOR -> warriorMenu.openInventory(p, skill);
+                        case FARMER -> farmerMenu.openInventory(p, skill);
+                        case ALCHEMIST -> alchemistMenu.openInventory(p, skill);
                         case SOME_DEFAULT -> choiceMenu.openInventory(p);
                         default -> p.sendMessage("Некорректно выбран класс.");
                     }

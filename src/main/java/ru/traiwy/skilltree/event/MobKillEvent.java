@@ -62,14 +62,6 @@ public class MobKillEvent implements Listener {
 
 
     private String getMobType(Entity entity) {
-        if (entity instanceof Zombie) return "zombie";
-        if (entity instanceof Skeleton) return "skeleton";
-        if (entity instanceof Spider) return "spider";
-        if (entity instanceof Witch) return "witch";
-        if (entity instanceof EnderDragon) return "ender_dragon";
-        if (entity instanceof Creeper) return "creeper";
-        if (entity instanceof Enderman) return "enderman";
-        if (entity instanceof Blaze) return "blaze";
-        return "other";
+        return entity.getType().name();
     }
 }

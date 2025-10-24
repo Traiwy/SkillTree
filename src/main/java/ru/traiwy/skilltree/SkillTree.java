@@ -1,5 +1,6 @@
 package ru.traiwy.skilltree;
 
+import com.zaxxer.hikari.HikariDataSource;
 import ru.traiwy.skilltree.command.AdminCommand;
 import ru.traiwy.skilltree.event.*;
 import ru.traiwy.skilltree.inv.AlchemistMenu;
@@ -13,6 +14,7 @@ import ru.traiwy.skilltree.service.GuiService;
 import ru.traiwy.skilltree.storage.MySqlStorage;
 
 public final class SkillTree extends JavaPlugin {
+    private MySqlStorage mySqlStorage;
 
     @Override
     public void onEnable() {
@@ -22,7 +24,7 @@ public final class SkillTree extends JavaPlugin {
         final ConfigManager configManager = new ConfigManager(this);
         configManager.load(getConfig());
 
-        final MySqlStorage mySqlStorage = new MySqlStorage(this);
+        this.mySqlStorage = new MySqlStorage(this);
         mySqlStorage.initDatabase();
 
 
@@ -46,7 +48,6 @@ public final class SkillTree extends JavaPlugin {
                 mySqlStorage,
                 challengeManager);
         getCommand("skilltree").setExecutor(new AdminCommand(this, mySqlStorage, choiceMenu, warriorMenu, farmerMenuHolder, alchemistMenu));
-        getServer().getPluginManager().registerEvents(choiceMenu, this);
         getServer().getPluginManager().registerEvents(new MobKillEvent(mySqlStorage, configManager, challengeManager, eventManager), this);
         getServer().getPluginManager().registerEvents(new BlocksBreakEvent(challengeManager, mySqlStorage, this, eventManager, itemBreakEvent), this);
         getServer().getPluginManager().registerEvents(new PlayersJoinEvent(mySqlStorage), this);
@@ -54,10 +55,14 @@ public final class SkillTree extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new LavaDamageEvent(mySqlStorage, challengeManager, this, eventManager), this);
         getServer().getPluginManager().registerEvents(itemBreakEvent, this);
         getServer().getPluginManager().registerEvents(new PotionDrinkEvent(mySqlStorage, eventManager, challengeManager), this);
-        getServer().getPluginManager().registerEvents(new GuiService(), this);
+        getServer().getPluginManager().registerEvents(new GuiService(panelManager, itemManager), this);
         getServer().getPluginManager().registerEvents(new PotionDamageEvent(eventManager, this, mySqlStorage, challengeManager), this);
-        getServer().getPluginManager().registerEvents(new ComboPotionDrinkEvent(mySqlStorage, eventManager,challengeManager), this);
+        getServer().getPluginManager().registerEvents(new ComboPotionDrinkEvent(mySqlStorage, eventManager, challengeManager), this);
         getServer().getPluginManager().registerEvents(new PotionDamageEntityEvent(mySqlStorage, eventManager, challengeManager), this);
     }
 
+    @Override
+    public void onDisable() {
+        mySqlStorage.shutdown();
+    }
 }

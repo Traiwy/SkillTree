@@ -52,6 +52,12 @@ public class MySqlStorage implements Storage {
         initDatabase();
     }
 
+      public void shutdown() {
+          if (dataSource != null && !dataSource.isClosed()) {
+              dataSource.close();
+          }
+      }
+
 
     public void initDatabase() {
         CompletableFuture.runAsync(() -> {

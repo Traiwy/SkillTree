@@ -25,7 +25,7 @@ import ru.traiwy.skilltree.enums.Skill;
 import java.util.Arrays;
 
 
-public class ChoiceMenu implements InventoryHolder, Listener {
+public class ChoiceMenu implements SkillMenu{
     final Inventory inventory = Bukkit.createInventory(this, 27, ChatColor.DARK_BLUE + "Выберите класс");
 
     private final WarriorMenu warriorMenu;
@@ -43,7 +43,6 @@ public class ChoiceMenu implements InventoryHolder, Listener {
 
         setupInventory();
     }
-
 
     @Override
     public Inventory getInventory() {
@@ -77,62 +76,31 @@ public class ChoiceMenu implements InventoryHolder, Listener {
         player.openInventory(inventory);
     }
 
-    @EventHandler
-    public void onClickInventoryPlayer(InventoryClickEvent event) {
+
+    @Override
+    public void onClick(InventoryClickEvent event) {
         final Player player = (Player) event.getWhoClicked();
-        final Inventory inv = event.getClickedInventory();
         final ItemStack item = event.getCurrentItem();
 
+        event.setCancelled(true);
 
-        if (inv != null && item != null && inv.getHolder() instanceof ChoiceMenu) {
-            event.setCancelled(true);
-
-            switch (item.getType()) {
-                case IRON_SWORD -> {
-                    giveFirstChallengeToPlayer(player, "warrior", Skill.WARRIOR);
-                    mySqlStorage.updatePlayer(new PlayerData(player.getName(), Skill.WARRIOR, 0));
-                    warriorMenu.openInventory(player);
-                }
-                case WHEAT -> {
-                    giveFirstChallengeToPlayer(player, "farmer", Skill.FARMER);
-                    mySqlStorage.updatePlayer(new PlayerData(player.getName(), Skill.FARMER, 0));
-                    farmerMenuHolder.openInventory(player);
-                }
-                case POTION -> {
-                    giveFirstChallengeToPlayer(player, "alchemist", Skill.ALCHEMIST);
-                    mySqlStorage.updatePlayer(new PlayerData(player.getName(), Skill.ALCHEMIST, 0));
-                    alchemistMenu.openInventory(player);
-                }
-                default -> player.sendMessage("Выберите меню достижений");
+        switch (item.getType()) {
+            case IRON_SWORD -> {
+                challengeManager.giveFirstChallengeToPlayer(player, "warrior", Skill.WARRIOR);
+                mySqlStorage.updatePlayer(new PlayerData(player.getName(), Skill.WARRIOR, 0));
+                warriorMenu.open(player);
+            }
+            case WHEAT -> {
+                challengeManager.giveFirstChallengeToPlayer(player, "farmer", Skill.FARMER);
+                mySqlStorage.updatePlayer(new PlayerData(player.getName(), Skill.FARMER, 0));
+                farmerMenuHolder.open(player);
+            }
+            case POTION -> {
+                challengeManager.giveFirstChallengeToPlayer(player, "alchemist", Skill.ALCHEMIST);
+                mySqlStorage.updatePlayer(new PlayerData(player.getName(), Skill.ALCHEMIST, 0));
+                alchemistMenu.open(player);
             }
         }
-    }
-
-    private void giveFirstChallengeToPlayer(Player player, String classPrefix, Skill skill) {
-        mySqlStorage.getPlayer(player.getName()).thenAccept(playerData -> {
-            if (playerData == null) {
-                PlayerData newPlayer = new PlayerData(player.getName(), skill, 0);
-                mySqlStorage.addPlayer(newPlayer);
-                mySqlStorage.getPlayer(player.getName()).thenAccept(addedPlayer -> {
-                    if (addedPlayer != null) {
-                        giveTask(addedPlayer, classPrefix);
-                    }
-                });
-            } else {
-                giveTask(playerData, classPrefix);
-            }
-        });
-    }
-
-    private void giveTask(PlayerData playerData, String classPrefix) {
-        ConfigManager.Challenge challenge = challengeManager.getFirstChallengeForClass(classPrefix);
-        if (challenge == null) {
-            System.out.println("challenge == null");
-            return;
-        }
-
-        Task task = new Task(0, playerData.getId(), challenge.getDisplayName(), challenge.getId(), Status.IN_PROGRESS, 0);
-        mySqlStorage.addTask(task);
     }
 }
 
