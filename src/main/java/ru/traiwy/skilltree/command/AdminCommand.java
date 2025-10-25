@@ -7,11 +7,14 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import ru.traiwy.skilltree.data.PlayerData;
 import ru.traiwy.skilltree.enums.Skill;
 import ru.traiwy.skilltree.inv.AlchemistMenu;
 import ru.traiwy.skilltree.inv.ChoiceMenu;
 import ru.traiwy.skilltree.inv.FarmerMenu;
 import ru.traiwy.skilltree.inv.WarriorMenu;
+import ru.traiwy.skilltree.session.PlayerSession;
+import ru.traiwy.skilltree.session.TaskSession;
 import ru.traiwy.skilltree.storage.MySqlStorage;
 
 import java.util.Arrays;
@@ -29,6 +32,8 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
     private final WarriorMenu warriorMenu;
     private final FarmerMenu farmerMenu;
     private final AlchemistMenu alchemistMenu;
+    private final PlayerSession playerSession;
+    private final TaskSession taskSession;
 
     private final String[] SUBCOMMAND = {"info", "addtask", "start"};
 
@@ -60,6 +65,8 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
                 }
             case "start":
                 menuCommandExecutor(p);
+
+
                 return true;
 
         }
@@ -90,10 +97,10 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
                 p.getScheduler().run(plugin, task -> {
                     Skill skill = playerData.getSkill();
                     switch (skill) {
-                        case WARRIOR -> warriorMenu.openInventory(p, skill);
-                        case FARMER -> farmerMenu.openInventory(p, skill);
-                        case ALCHEMIST -> alchemistMenu.openInventory(p, skill);
-                        case SOME_DEFAULT -> choiceMenu.openInventory(p);
+                        case WARRIOR -> warriorMenu.open(p);
+                        case FARMER -> farmerMenu.open(p);
+                        case ALCHEMIST -> alchemistMenu.open(p);
+                        case SOME_DEFAULT -> choiceMenu.open(p);
                         default -> p.sendMessage("Некорректно выбран класс.");
                     }
                 }, null);

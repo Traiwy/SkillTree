@@ -1,6 +1,7 @@
 package ru.traiwy.skilltree.manager;
 
 
+import com.mysql.cj.exceptions.StreamingNotifiable;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import ru.traiwy.skilltree.data.PlayerData;
@@ -8,9 +9,11 @@ import ru.traiwy.skilltree.data.Task;
 import ru.traiwy.skilltree.enums.Skill;
 import ru.traiwy.skilltree.enums.Status;
 import ru.traiwy.skilltree.session.PlayerSession;
+import ru.traiwy.skilltree.session.TaskSession;
 import ru.traiwy.skilltree.storage.MySqlStorage;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -21,11 +24,16 @@ public class ChallengeManager {
     private final ConfigManager configManager;
     private final MySqlStorage mySqlStorage;
     private final PlayerSession playerSession;
+    private final TaskSession taskSession;
 
-    public ChallengeManager(ConfigManager configManager, MySqlStorage mySqlStorage, PlayerSession playerSession) {
+    private final List<ConfigManager.Challenge> allChallenges;
+
+    public ChallengeManager(ConfigManager configManager, MySqlStorage mySqlStorage, PlayerSession playerSession, TaskSession taskSession) {
         this.configManager = configManager;
         this.mySqlStorage = mySqlStorage;
         this.playerSession = playerSession;
+        this.taskSession = taskSession;
+        this.allChallenges = configManager.getChallenges();
     }
 
 
@@ -38,13 +46,24 @@ public class ChallengeManager {
         return configManager.getById(id);
     }
 
-    public ConfigManager.Challenge getFirstChallengeForClass(String classPrefix) {
-        for (ConfigManager.Challenge challenge : getAllChallenges()) {
-            if (challenge.getId().startsWith(classPrefix)) {
-                return challenge;
+
+
+    public List<String> getAllId() {
+        List<String> ids = new ArrayList<>();
+        List<ConfigManager.Challenge> challenges = configManager.getChallenges();
+
+        if (challenges == null || challenges.isEmpty()) {
+            System.out.println("§cНет загруженных челленджей!");
+            return ids;
+        }
+
+        for (ConfigManager.Challenge challenge : challenges) {
+            if (challenge.getId() != null && !challenge.getId().isEmpty()) {
+                ids.add(challenge.getId());
             }
         }
-        return null;
+
+        return ids;
     }
 
 
@@ -67,38 +86,73 @@ public class ChallengeManager {
             }
         }
     }
-    public CompletableFuture<Task> getNextChallenge(Player player){
-        PlayerData playerData = playerSession.getPlayerData(player.getName());
-        if(playerData != null) {
-            return mySqlStorage.getTasksByPlayer(playerData.getId())
-                    .thenApply(tasks -> {
-                        for (Task task : tasks) {
-                            if (task.getStatus() == Status.IN_PROGRESS) {
-                                return task;
-                            }
-                        }
-                        return null;
-                    });
+
+    public void setAllChallenge(String playerName, String classPrefix) {
+        PlayerData playerData = playerSession.getPlayerData(playerName);
+
+        if (playerData == null) {
+            Bukkit.getLogger().warning("PlayerData is null");
+            return;
         }
 
+        List<ConfigManager.Challenge> challenges = getAllChallenges();
+
+        for (ConfigManager.Challenge challenge : challenges) {
+            if (challenge.getId().startsWith(classPrefix)) {
+
+                Task task = new Task(
+                        0,
+                        playerData.getId(),
+                        challenge.getDisplayName(),
+                        challenge.getId(),
+                        Status.NOT_STARTED,
+                        0
+                );
+
+                mySqlStorage.addTask(task);
+                taskSession.putTask(playerName, task);
+            }
+
+        }
+
+    }
+
+    public Task getNextChallenge(Player player) {
+        PlayerData playerData = playerSession.getPlayerData(player.getName());
+        if (playerData != null) {
+            Task task = taskSession.getActiveTask(player.getName());
+            if (task.getStatus() == Status.IN_PROGRESS) {
+                return task;
+            }
+        }
+        return null;
+
+    }
+
+
+
+    public ConfigManager.Challenge getFirstChallengeForClass(String classPrefix) {
+        for (ConfigManager.Challenge challenge : getAllChallenges()) {
+            if (challenge.getId().startsWith(classPrefix)) {
+                return challenge;
+            }
+        }
         return null;
     }
 
     public void giveFirstChallengeToPlayer(Player player, String classPrefix, Skill skill) {
-        mySqlStorage.getPlayer(player.getName()).thenAccept(playerData -> {
-            if (playerData == null) {
-                PlayerData newPlayer = new PlayerData(player.getName(), skill, 0);
-                mySqlStorage.addPlayer(newPlayer);
-                mySqlStorage.getPlayer(player.getName()).thenAccept(addedPlayer -> {
-                    if (addedPlayer != null) {
-                        giveTask(addedPlayer, classPrefix);
-                    }
-                });
-            } else {
-                giveTask(playerData, classPrefix);
-            }
-        });
+        PlayerData playerData = playerSession.getPlayerData(player.getName());
+        if (playerData == null) {
+            PlayerData newPlayer = new PlayerData(player.getName(), skill, 0);
+            mySqlStorage.addPlayer(newPlayer);
+            giveTask(newPlayer, classPrefix);
+
+        } else {
+            giveTask(playerData, classPrefix);
+        }
+
     }
+
     private void giveTask(PlayerData playerData, String classPrefix) {
         ConfigManager.Challenge challenge = getFirstChallengeForClass(classPrefix);
         if (challenge == null) {
@@ -109,4 +163,5 @@ public class ChallengeManager {
         Task task = new Task(0, playerData.getId(), challenge.getDisplayName(), challenge.getId(), Status.IN_PROGRESS, 0);
         mySqlStorage.addTask(task);
     }
+
 }

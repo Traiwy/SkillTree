@@ -11,11 +11,13 @@ import ru.traiwy.skilltree.inv.WarriorMenu;
 import ru.traiwy.skilltree.manager.*;
 import ru.traiwy.skilltree.service.GuiService;
 import ru.traiwy.skilltree.session.PlayerSession;
+import ru.traiwy.skilltree.session.TaskSession;
 import ru.traiwy.skilltree.storage.MySqlStorage;
 
 public final class SkillTree extends JavaPlugin {
     private MySqlStorage mySqlStorage;
     private PlayerSession playerSession;
+    private TaskSession taskSession;
 
     private ConfigManager configManager;
     private ChallengeManager challengeManager;
@@ -32,9 +34,10 @@ public final class SkillTree extends JavaPlugin {
         mySqlStorage.initDatabase();
 
         playerSession = new PlayerSession(mySqlStorage);
+        taskSession = new TaskSession(mySqlStorage);
 
 
-        challengeManager = new ChallengeManager(configManager, mySqlStorage);
+        challengeManager = new ChallengeManager(configManager, mySqlStorage, playerSession, taskSession);
         panelManager = new PanelManager(configManager, mySqlStorage, challengeManager);
         itemManager = new ItemManager(mySqlStorage, configManager, this);
         eventManager = new EventManager(challengeManager, mySqlStorage);
@@ -84,7 +87,7 @@ public final class SkillTree extends JavaPlugin {
                                   FarmerMenu farmerMenu,
                                   AlchemistMenu alchemistMenu) {
         getCommand("skilltree").setExecutor(
-                new AdminCommand(this, mySqlStorage, choiceMenu, warriorMenu, farmerMenu, alchemistMenu)
+                new AdminCommand(this, mySqlStorage, choiceMenu, warriorMenu, farmerMenu, alchemistMenu, playerSession, taskSession)
         );
     }
 
@@ -92,9 +95,9 @@ public final class SkillTree extends JavaPlugin {
                                 WarriorMenu warriorMenu,
                                 FarmerMenu farmerMenu) {
 
-        getServer().getPluginManager().registerEvents(new MobKillEvent(mySqlStorage, configManager, challengeManager, eventManager), this);
+        getServer().getPluginManager().registerEvents(new MobKillEvent(challengeManager, eventManager, playerSession, taskSession), this);
         getServer().getPluginManager().registerEvents(new BlocksBreakEvent(challengeManager, mySqlStorage, this, eventManager, new ItemBreakEvent(challengeManager, mySqlStorage, this, eventManager)), this);
-        getServer().getPluginManager().registerEvents(new PlayersSessionEvent(playerSession), this);
+        getServer().getPluginManager().registerEvents(new PlayersSessionEvent(playerSession, taskSession), this);
 
         getServer().getPluginManager().registerEvents(new BlockHitEvent(challengeManager, mySqlStorage, this, eventManager), this);
         getServer().getPluginManager().registerEvents(new LavaDamageEvent(mySqlStorage, challengeManager, this, eventManager), this);

@@ -5,6 +5,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -23,9 +24,15 @@ import ru.traiwy.skilltree.util.ItemMetaUtils;
 import ru.traiwy.skilltree.enums.Skill;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 
 public class ChoiceMenu implements SkillMenu{
+    public record ClassData(String prefix, Skill skill, SkillMenu skillMenu, ItemStack icon) { }
+
+    private final Map<Material, ClassData> classDataMap;
+
     final Inventory inventory = Bukkit.createInventory(this, 27, ChatColor.DARK_BLUE + "Выберите класс");
 
     private final WarriorMenu warriorMenu;
@@ -34,15 +41,43 @@ public class ChoiceMenu implements SkillMenu{
     private final MySqlStorage mySqlStorage;
     private final ChallengeManager challengeManager;
 
-    public ChoiceMenu(WarriorMenu warriorMenu, FarmerMenu farmerMenuHolder, AlchemistMenu alchemistMenu, MySqlStorage mySqlStorage, ChallengeManager challengeManager) {
+
+
+    public ChoiceMenu(WarriorMenu warriorMenu,
+                      FarmerMenu farmerMenuHolder,
+                      AlchemistMenu alchemistMenu,
+                      MySqlStorage mySqlStorage,
+                      ChallengeManager challengeManager) {
         this.warriorMenu = warriorMenu;
         this.farmerMenuHolder = farmerMenuHolder;
         this.alchemistMenu = alchemistMenu;
         this.mySqlStorage = mySqlStorage;
         this.challengeManager = challengeManager;
 
+        this.classDataMap = Map.of(
+                Material.IRON_SWORD, new ClassData("warrior", Skill.WARRIOR, warriorMenu, new ItemStack(Material.IRON_SWORD)),
+                Material.WHEAT, new ClassData("farmer", Skill.FARMER, farmerMenuHolder, new ItemStack(Material.WHEAT)),
+                Material.POTION, new ClassData("alchemist", Skill.ALCHEMIST, alchemistMenu, new ItemStack(Material.POTION))
+        );
+         ItemStack warriorIcon = ItemMetaUtils.applyItemMeta(
+                new ItemStack(Material.IRON_SWORD),
+                ChatColor.RED + "Путь воина",
+                List.of(ChatColor.GRAY + "Стань мастером боя", ChatColor.GREEN + "Доступно")
+        );
+         ItemStack farmerIcon = ItemMetaUtils.applyItemMeta(
+                 new ItemStack(Material.WHEAT),
+                 ChatColor.GREEN + "Путь фермера",
+                 List.of(ChatColor.GRAY + "Выращивай урожай", ChatColor.GREEN + "Доступно"));
+
+         ItemStack alchemistIcon = ItemMetaUtils.applyItemMeta(
+                 new ItemStack(Material.POTION),
+                 ChatColor.YELLOW + "Путь алхимика",
+                 List.of(ChatColor.GRAY + "Создавай зелья", ChatColor.RED + "Доступно"));
+
+
         setupInventory();
     }
+
 
     @Override
     public Inventory getInventory() {
@@ -57,23 +92,10 @@ public class ChoiceMenu implements SkillMenu{
             inventory.setItem(i, filler);
         }
 
-        final ItemStack headWarrior = new ItemStack(Material.IRON_SWORD);
-        final ItemStack headFarmer = new ItemStack(Material.WHEAT);
-        final ItemStack headAlchemist = new ItemStack(Material.POTION);
+        inventory.setItem(11, classDataMap.get(Material.IRON_SWORD).icon());
+        inventory.setItem(13, classDataMap.get(Material.WHEAT).icon);
+        inventory.setItem(15, classDataMap.get(Material.POTION).icon);
 
-
-        ItemMetaUtils.applyItemMeta(headWarrior, ChatColor.RED + "Путь воина", Arrays.asList(ChatColor.GRAY + "Стань мастером боя", ChatColor.GREEN + "Доступно"));
-        ItemMetaUtils.applyItemMeta(headFarmer, ChatColor.GREEN + "Путь фермера", Arrays.asList(ChatColor.GRAY + "Выращивай урожай", ChatColor.GREEN + "Доступно"));
-        ItemMetaUtils.applyItemMeta(headAlchemist, ChatColor.YELLOW + "Путь алхимика", Arrays.asList(ChatColor.GRAY + "Создавай зелья", ChatColor.RED + "Доступно"));
-
-        inventory.setItem(11, headWarrior);
-        inventory.setItem(13, headFarmer);
-        inventory.setItem(15, headAlchemist);
-
-    }
-
-    public void openInventory(Player player){
-        player.openInventory(inventory);
     }
 
 
@@ -82,25 +104,18 @@ public class ChoiceMenu implements SkillMenu{
         final Player player = (Player) event.getWhoClicked();
         final ItemStack item = event.getCurrentItem();
 
-        event.setCancelled(true);
-
-        switch (item.getType()) {
-            case IRON_SWORD -> {
-                challengeManager.giveFirstChallengeToPlayer(player, "warrior", Skill.WARRIOR);
-                mySqlStorage.updatePlayer(new PlayerData(player.getName(), Skill.WARRIOR, 0));
-                warriorMenu.open(player);
-            }
-            case WHEAT -> {
-                challengeManager.giveFirstChallengeToPlayer(player, "farmer", Skill.FARMER);
-                mySqlStorage.updatePlayer(new PlayerData(player.getName(), Skill.FARMER, 0));
-                farmerMenuHolder.open(player);
-            }
-            case POTION -> {
-                challengeManager.giveFirstChallengeToPlayer(player, "alchemist", Skill.ALCHEMIST);
-                mySqlStorage.updatePlayer(new PlayerData(player.getName(), Skill.ALCHEMIST, 0));
-                alchemistMenu.open(player);
-            }
+        ClassData data = classDataMap.get(item.getType());
+        if (data != null) {
+            challengeManager.giveFirstChallengeToPlayer(player, data.prefix(), data.skill());
+            challengeManager.setAllChallenge(player.getName(), data.prefix());
+            mySqlStorage.updatePlayer(new PlayerData(player.getName(), data.skill(), 0));
+            data.skillMenu.open(player);
         }
+    }
+
+    @Override
+    public void open(Player player) {
+        player.openInventory(inventory);
     }
 }
 

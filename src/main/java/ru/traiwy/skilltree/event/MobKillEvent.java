@@ -58,9 +58,9 @@ public class MobKillEvent implements Listener {
                 if(task.getStatus() == Status.COMPLETED) {
                     challengeManager.setNextChallenge(challenge, task);
 
-                    CompletableFuture<Task> nextTask = challengeManager.getNextChallenge(player);
+                   //CompletableFuture<Task> nextTask = challengeManager.getNextChallenge(player);
 
-                    taskSession.putTask(player.getName(), nextTask);
+                   //taskSession.putTask(player.getName(), nextTask);
                     return;
                 }
             }
