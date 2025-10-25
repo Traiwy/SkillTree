@@ -7,21 +7,25 @@ import ru.traiwy.skilltree.data.PlayerData;
 import ru.traiwy.skilltree.data.Task;
 import ru.traiwy.skilltree.enums.Skill;
 import ru.traiwy.skilltree.enums.Status;
+import ru.traiwy.skilltree.session.PlayerSession;
 import ru.traiwy.skilltree.storage.MySqlStorage;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 public class ChallengeManager {
 
     private final ConfigManager configManager;
     private final MySqlStorage mySqlStorage;
+    private final PlayerSession playerSession;
 
-    public ChallengeManager(ConfigManager configManager, MySqlStorage mySqlStorage) {
+    public ChallengeManager(ConfigManager configManager, MySqlStorage mySqlStorage, PlayerSession playerSession) {
         this.configManager = configManager;
         this.mySqlStorage = mySqlStorage;
+        this.playerSession = playerSession;
     }
 
 
@@ -44,24 +48,6 @@ public class ChallengeManager {
     }
 
 
-    public List<String> getAllId() {
-        List<String> ids = new ArrayList<>();
-        List<ConfigManager.Challenge> challenges = configManager.getChallenges();
-
-        if (challenges == null || challenges.isEmpty()) {
-            System.out.println("§cНет загруженных челленджей!");
-            return ids;
-        }
-
-        for (ConfigManager.Challenge challenge : challenges) {
-            if (challenge.getId() != null && !challenge.getId().isEmpty()) {
-                ids.add(challenge.getId());
-            }
-        }
-
-        return ids;
-    }
-
     public void setNextChallenge(ConfigManager.Challenge challenge, Task task) {
         final String nextId = challenge.getNextChallengeId();
 
@@ -81,6 +67,23 @@ public class ChallengeManager {
             }
         }
     }
+    public CompletableFuture<Task> getNextChallenge(Player player){
+        PlayerData playerData = playerSession.getPlayerData(player.getName());
+        if(playerData != null) {
+            return mySqlStorage.getTasksByPlayer(playerData.getId())
+                    .thenApply(tasks -> {
+                        for (Task task : tasks) {
+                            if (task.getStatus() == Status.IN_PROGRESS) {
+                                return task;
+                            }
+                        }
+                        return null;
+                    });
+        }
+
+        return null;
+    }
+
     public void giveFirstChallengeToPlayer(Player player, String classPrefix, Skill skill) {
         mySqlStorage.getPlayer(player.getName()).thenAccept(playerData -> {
             if (playerData == null) {

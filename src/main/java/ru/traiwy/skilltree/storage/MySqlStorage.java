@@ -52,11 +52,11 @@ public class MySqlStorage implements Storage {
         initDatabase();
     }
 
-      public void shutdown() {
-          if (dataSource != null && !dataSource.isClosed()) {
-              dataSource.close();
-          }
-      }
+    public void shutdown() {
+        if (dataSource != null && !dataSource.isClosed()) {
+            dataSource.close();
+        }
+    }
 
 
     public void initDatabase() {
@@ -321,35 +321,4 @@ public class MySqlStorage implements Storage {
         }, executorService);
     }
 
-    @Override
-    public CompletableFuture<Integer> countTasksByStatus(String status) {
-        return CompletableFuture.supplyAsync(() -> {
-            final String sql = "SELECT COUNT(*) AS count FROM tasks WHERE status = ?";
-            try (Connection conn = dataSource.getConnection();
-                 PreparedStatement ps = conn.prepareStatement(sql)) {
-                ps.setString(1, status.toUpperCase());
-                try (ResultSet rs = ps.executeQuery()) {
-                    if (rs.next()) return rs.getInt("count");
-                }
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
-            return 0;
-        }, executorService);
-    }
-
-    @Override
-    public CompletableFuture<Integer> countPlayers() {
-        return CompletableFuture.supplyAsync(() -> {
-            final String sql = "SELECT COUNT(*) AS count FROM players";
-            try (Connection conn = dataSource.getConnection();
-                 PreparedStatement ps = conn.prepareStatement(sql);
-                 ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return rs.getInt("count");
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
-            return 0;
-        }, executorService);
-    }
 }

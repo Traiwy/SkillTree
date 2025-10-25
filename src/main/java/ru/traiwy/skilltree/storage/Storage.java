@@ -25,8 +25,6 @@ public interface Storage {
     void removeTask(int id);
     void updateTask(Task task);
 
-    CompletableFuture<Integer> countTasksByStatus(String status);
-    CompletableFuture<Integer> countPlayers();
 
 
 }

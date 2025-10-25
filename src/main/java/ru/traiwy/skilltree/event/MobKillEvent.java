@@ -11,16 +11,19 @@ import ru.traiwy.skilltree.enums.Status;
 import ru.traiwy.skilltree.manager.ChallengeManager;
 import ru.traiwy.skilltree.manager.ConfigManager;
 import ru.traiwy.skilltree.manager.EventManager;
+import ru.traiwy.skilltree.session.PlayerSession;
+import ru.traiwy.skilltree.session.TaskSession;
 import ru.traiwy.skilltree.storage.MySqlStorage;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @AllArgsConstructor
 public class MobKillEvent implements Listener {
-    private final MySqlStorage mySqlStorage;
-    private final ConfigManager configManager;
     private final ChallengeManager challengeManager;
     private final EventManager eventManager;
+    private final PlayerSession playerSession;
+    private final TaskSession taskSession;
 
     @EventHandler
     public void onEntityDeath(EntityDeathEvent event) {
@@ -29,14 +32,14 @@ public class MobKillEvent implements Listener {
 
         final String mobType = getMobType(event.getEntity());
 
-        mySqlStorage.getPlayer(killer.getName()).thenAccept(playerData -> {
-            if (playerData == null) return;
-            mySqlStorage.getTasksByPlayer(playerData.getId()).thenAccept(tasks -> {
-                for (Task task : tasks) {
-                    processTask(task, mobType, killer);
-                }
-            });
-        });
+        PlayerData playerData = playerSession.getPlayerData(killer.getName());
+
+        if(playerData != null) {
+            Task task = taskSession.getActiveTask(playerData.getPlayerName());
+            if(task != null) {
+                processTask(task, mobType, killer);
+            }
+        }
     }
 
     private void processTask(Task task, String mobType, Player player) {
@@ -54,6 +57,10 @@ public class MobKillEvent implements Listener {
                 eventManager.handleProgress(task, challenge, player);
                 if(task.getStatus() == Status.COMPLETED) {
                     challengeManager.setNextChallenge(challenge, task);
+
+                    CompletableFuture<Task> nextTask = challengeManager.getNextChallenge(player);
+
+                    taskSession.putTask(player.getName(), nextTask);
                     return;
                 }
             }
