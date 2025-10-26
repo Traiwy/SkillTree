@@ -106,8 +106,7 @@ public class ChoiceMenu implements SkillMenu{
 
         ClassData data = classDataMap.get(item.getType());
         if (data != null) {
-            challengeManager.giveFirstChallengeToPlayer(player, data.prefix(), data.skill());
-            challengeManager.setAllChallenge(player.getName(), data.prefix());
+            challengeManager.giveAllChallengesToPlayer(player, data.prefix, data.skill);
             mySqlStorage.updatePlayer(new PlayerData(player.getName(), data.skill(), 0));
             data.skillMenu.open(player);
         }

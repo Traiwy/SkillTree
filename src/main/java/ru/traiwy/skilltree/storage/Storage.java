@@ -12,6 +12,7 @@ public interface Storage {
 
     CompletableFuture<PlayerData> getPlayer(String playerName);
     CompletableFuture<PlayerData> getPlayer(int id);
+    CompletableFuture<PlayerData> addPlayerAsync(PlayerData player);
     void addPlayer(PlayerData player);
     void removePlayer(int id);
     void updatePlayer(PlayerData player);

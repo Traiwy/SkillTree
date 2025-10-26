@@ -157,6 +157,30 @@ public class MySqlStorage implements Storage {
     }
 
     @Override
+    public CompletableFuture<PlayerData> addPlayerAsync(PlayerData player) {
+        return CompletableFuture.supplyAsync(() -> {
+            final String sql = "INSERT INTO players (player_name, class, progress) VALUES (?, ?, ?)";
+            try (Connection conn = dataSource.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                ps.setString(1, player.getPlayerName());
+                ps.setString(2, String.valueOf(player.getSkill()));
+                ps.setInt(3, player.getProgress());
+                ps.executeUpdate();
+
+                try (ResultSet rs = ps.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        player.setId(rs.getInt(1));
+                    }
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+            return player;
+        }, executorService);
+    }
+
+
+    @Override
     public void removePlayer(int id) {
         CompletableFuture.runAsync(() -> {
             final String sql = "DELETE FROM players WHERE id = ?";

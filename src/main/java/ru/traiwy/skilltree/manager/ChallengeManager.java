@@ -47,7 +47,6 @@ public class ChallengeManager {
     }
 
 
-
     public List<String> getAllId() {
         List<String> ids = new ArrayList<>();
         List<ConfigManager.Challenge> challenges = configManager.getChallenges();
@@ -87,81 +86,62 @@ public class ChallengeManager {
         }
     }
 
-    public void setAllChallenge(String playerName, String classPrefix) {
-        PlayerData playerData = playerSession.getPlayerData(playerName);
+    public void giveAllChallengesToPlayer(Player player, String classPrefix, Skill skill) {
 
-        if (playerData == null) {
-            Bukkit.getLogger().warning("PlayerData is null");
+        PlayerData playerData = getOrCreatePlayer(player, skill);
+
+
+        List<ConfigManager.Challenge> classChallenges = getAllChallengesForClass(classPrefix);
+
+        if (classChallenges.isEmpty()) {
+            Bukkit.getLogger().warning("Нет челленджей для класса " + classPrefix);
             return;
         }
 
-        List<ConfigManager.Challenge> challenges = getAllChallenges();
 
-        for (ConfigManager.Challenge challenge : challenges) {
-            if (challenge.getId().startsWith(classPrefix)) {
+        boolean first = true;
+        for (ConfigManager.Challenge challenge : classChallenges) {
+            Status status = first ? Status.IN_PROGRESS : Status.NOT_STARTED;
+            first = false;
 
-                Task task = new Task(
-                        0,
-                        playerData.getId(),
-                        challenge.getDisplayName(),
-                        challenge.getId(),
-                        Status.NOT_STARTED,
-                        0
-                );
-
-                mySqlStorage.addTask(task);
-                taskSession.putTask(playerName, task);
-            }
-
+            createTaskForPlayer(playerData, challenge, status);
         }
-
     }
 
-    public Task getNextChallenge(Player player) {
-        PlayerData playerData = playerSession.getPlayerData(player.getName());
-        if (playerData != null) {
-            Task task = taskSession.getActiveTask(player.getName());
-            if (task.getStatus() == Status.IN_PROGRESS) {
-                return task;
-            }
-        }
-        return null;
-
+    private List<ConfigManager.Challenge> getAllChallengesForClass(String classPrefix) {
+        return getAllChallenges().stream()
+                .filter(c -> c.getId().startsWith(classPrefix))
+                .toList();
     }
 
 
+    private void createTaskForPlayer(PlayerData playerData, ConfigManager.Challenge challenge, Status status) {
+        Task task = new Task(
+                0,
+                playerData.getId(),
+                challenge.getDisplayName(),
+                challenge.getId(),
+                status,
+                0
+        );
 
-    public ConfigManager.Challenge getFirstChallengeForClass(String classPrefix) {
-        for (ConfigManager.Challenge challenge : getAllChallenges()) {
-            if (challenge.getId().startsWith(classPrefix)) {
-                return challenge;
-            }
-        }
-        return null;
-    }
-
-    public void giveFirstChallengeToPlayer(Player player, String classPrefix, Skill skill) {
-        PlayerData playerData = playerSession.getPlayerData(player.getName());
-        if (playerData == null) {
-            PlayerData newPlayer = new PlayerData(player.getName(), skill, 0);
-            mySqlStorage.addPlayer(newPlayer);
-            giveTask(newPlayer, classPrefix);
-
-        } else {
-            giveTask(playerData, classPrefix);
-        }
-
-    }
-
-    private void giveTask(PlayerData playerData, String classPrefix) {
-        ConfigManager.Challenge challenge = getFirstChallengeForClass(classPrefix);
-        if (challenge == null) {
-            System.out.println("challenge == null");
-            return;
-        }
-
-        Task task = new Task(0, playerData.getId(), challenge.getDisplayName(), challenge.getId(), Status.IN_PROGRESS, 0);
         mySqlStorage.addTask(task);
+        taskSession.putTask(playerData.getPlayerName(), task);
     }
 
+
+    private PlayerData getOrCreatePlayer(Player player, Skill skill) {
+        PlayerData cachedPlayer = playerSession.getPlayerData(player.getName());
+        if (cachedPlayer != null) return cachedPlayer;
+
+        PlayerData newPlayer = new PlayerData(player.getName(), skill, 0);
+        savePlayerAsync(newPlayer);
+        return newPlayer;
+    }
+
+
+    private void savePlayerAsync(PlayerData playerData) {
+        mySqlStorage.addPlayer(playerData);
+        playerSession.updatePlayerData(playerData);
+    }
 }
