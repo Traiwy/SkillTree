@@ -2,12 +2,12 @@ package ru.traiwy.skilltree;
 
 import ru.traiwy.skilltree.command.AdminCommand;
 import ru.traiwy.skilltree.event.*;
-import ru.traiwy.skilltree.inv.AlchemistMenu;
-import ru.traiwy.skilltree.inv.ChoiceMenu;
+import ru.traiwy.skilltree.inv.impl.AlchemistMenu;
+import ru.traiwy.skilltree.inv.impl.ChoiceMenu;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import ru.traiwy.skilltree.inv.FarmerMenu;
-import ru.traiwy.skilltree.inv.WarriorMenu;
+import ru.traiwy.skilltree.inv.impl.FarmerMenu;
+import ru.traiwy.skilltree.inv.impl.WarriorMenu;
 import ru.traiwy.skilltree.manager.*;
 import ru.traiwy.skilltree.service.GuiService;
 import ru.traiwy.skilltree.storage.MySqlStorage;

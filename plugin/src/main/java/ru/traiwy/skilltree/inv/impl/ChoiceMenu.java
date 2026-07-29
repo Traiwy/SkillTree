@@ -1,6 +1,5 @@
-package ru.traiwy.skilltree.inv;
+package ru.traiwy.skilltree.inv.impl;
 
-import lombok.NoArgsConstructor;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;

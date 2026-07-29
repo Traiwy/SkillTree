@@ -3,9 +3,9 @@ package ru.traiwy.skilltree.service;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import ru.traiwy.skilltree.inv.AlchemistMenu;
-import ru.traiwy.skilltree.inv.FarmerMenu;
-import ru.traiwy.skilltree.inv.WarriorMenu;
+import ru.traiwy.skilltree.inv.impl.AlchemistMenu;
+import ru.traiwy.skilltree.inv.impl.FarmerMenu;
+import ru.traiwy.skilltree.inv.impl.WarriorMenu;
 
 public class GuiService implements Listener {
 

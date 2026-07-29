@@ -1,23 +1,21 @@
 package ru.traiwy.skilltree.command;
 
 import lombok.AllArgsConstructor;
-import org.bukkit.Bukkit;
 import org.bukkit.command.*;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.traiwy.skilltree.enums.Skill;
-import ru.traiwy.skilltree.inv.AlchemistMenu;
-import ru.traiwy.skilltree.inv.ChoiceMenu;
-import ru.traiwy.skilltree.inv.FarmerMenu;
-import ru.traiwy.skilltree.inv.WarriorMenu;
+import ru.traiwy.skilltree.inv.impl.AlchemistMenu;
+import ru.traiwy.skilltree.inv.impl.ChoiceMenu;
+import ru.traiwy.skilltree.inv.impl.FarmerMenu;
+import ru.traiwy.skilltree.inv.impl.WarriorMenu;
 import ru.traiwy.skilltree.storage.MySqlStorage;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 
