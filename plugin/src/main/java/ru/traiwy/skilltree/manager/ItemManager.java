@@ -19,13 +19,11 @@ import java.util.concurrent.CompletableFuture;
 
 public class ItemManager {
     private final MySqlStorage mySqlStorage;
-    private final ConfigManager configManager;
     private FileConfiguration config;
     private final JavaPlugin plugin;
 
-    public ItemManager(MySqlStorage mySqlStorage, ConfigManager configManager, JavaPlugin plugin) {
+    public ItemManager(MySqlStorage mySqlStorage, JavaPlugin plugin) {
         this.mySqlStorage = mySqlStorage;
-        this.configManager = configManager;
         this.config = plugin.getConfig();
         this.plugin = plugin;
     }

@@ -1,11 +1,19 @@
 package ru.traiwy.skilltree.command;
 
-import lombok.AllArgsConstructor;
-import org.bukkit.command.*;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
+import io.papermc.paper.command.brigadier.Commands;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import ru.traiwy.skilltree.configuration.MessageConfiguration;
 import ru.traiwy.skilltree.enums.Skill;
 import ru.traiwy.skilltree.inv.impl.AlchemistMenu;
 import ru.traiwy.skilltree.inv.impl.ChoiceMenu;
@@ -19,48 +27,52 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 
-@AllArgsConstructor
-public class AdminCommand implements CommandExecutor, TabCompleter {
-    private final JavaPlugin plugin;
-    private final MySqlStorage mySqlStorage;
-    private final ChoiceMenu choiceMenu;
-    private final WarriorMenu warriorMenu;
-    private final FarmerMenu farmerMenu;
-    private final AlchemistMenu alchemistMenu;
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+public final class AdminCommand implements CommandExecutor, TabCompleter {
+    JavaPlugin plugin;
+    MySqlStorage mySqlStorage;
+    ChoiceMenu choiceMenu;
+    WarriorMenu warriorMenu;
+    FarmerMenu farmerMenu;
+    AlchemistMenu alchemistMenu;
+
+    MessageConfiguration message;
 
     private final String[] SUBCOMMAND = {"info", "addtask", "start"};
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        Player p = (Player) sender;
 
-        if (args.length == 0) {
-            choiceMenu.getInventory();
-            p.sendMessage("§cИспользуйте: /skilltree <info|addtask>");
-            return true;
-        }
+        Commands.literal("skill")
+                .executes(ctx ->{
+                    Player player = (Player)ctx.getSource();
+                    player.sendMessage(message.commandNotFound());
+                    return 1;
+                })
+                .then(Commands.literal("info")
+                        .executes(ctx -> {
+                            showInfoPlayer((Player)ctx.getSource());
+                            return 1;
+                        })
+                ).then(Commands.literal("addtask")
+                        .executes(ctx -> {
+                            return 1;
+                        })
+                        .then(Commands.argument("numberTask", IntegerArgumentType.integer(1, 9))
+                                .executes(ctx ->{
+                                    int taskNumber = ctx.getArgument("numberTask", int.class);
+                                    if(taskNumber > 9) {
 
-        String subcommand = args[0];
-        switch (subcommand) {
-            case "info":
-                showInfoPlayer(p);
-                break;
-            case "addtask":
-                if (args.length != 3) {
-                    p.sendMessage("§cИспользуйте: /skilltree addtask <игрок> <номер задания>");
-                    return true;
-                }
-                String targetName = args[1];
-                int taskNumber = Integer.parseInt(args[2]);
-                if (taskNumber > 9) {
-                    p.sendMessage("§cНомер задания не может быть больше 9.");
-                    return true;
-                }
-            case "start":
-                menuCommandExecutor(p);
-                return true;
+                                    }
+                                    return 1;
+                                }))
+                ).then(Commands.literal("start")
+                        .executes(ctx -> {
+                            menuCommandExecutor((Player) ctx.getSource());
+                            return 1;
+                        }));
 
-        }
         return true;
     }
 
@@ -88,10 +100,10 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
                 p.getScheduler().run(plugin, task -> {
                     Skill skill = playerData.getSkill();
                     switch (skill) {
-                        case WARRIOR -> warriorMenu.openInventory(p);
-                        case FARMER -> farmerMenu.openInventory(p);
-                        case ALCHEMIST -> alchemistMenu.openInventory(p);
-                        case SOME_DEFAULT -> choiceMenu.openInventory(p);
+                       //case WARRIOR -> warriorMenu.openInventory(p);
+                       //case FARMER -> farmerMenu.openInventory(p);
+                       //case ALCHEMIST -> alchemistMenu.openInventory(p);
+                       //case SOME_DEFAULT -> choiceMenu.openInventory(p);
                         default -> p.sendMessage("Некорректно выбран класс.");
                     }
                 }, null);

@@ -8,7 +8,6 @@ import ru.traiwy.skilltree.data.PlayerData;
 import ru.traiwy.skilltree.data.Task;
 import ru.traiwy.skilltree.enums.Skill;
 import ru.traiwy.skilltree.enums.Status;
-import ru.traiwy.skilltree.manager.ConfigManager;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -31,13 +30,13 @@ public class MySqlStorage implements Storage {
     }
 
     public void setupDataSource() {
-        final String url = "jdbc:mysql://" + ConfigManager.MySQL.HOST + ":" +
-                ConfigManager.MySQL.PORT + "/" + ConfigManager.MySQL.DATABASE;
+       // final String url = "jdbc:mysql://" + ConfigManager.MySQL.HOST + ":" +
+       //         ConfigManager.MySQL.PORT + "/" + ConfigManager.MySQL.DATABASE;
 
         final HikariConfig config = new HikariConfig();
-        config.setJdbcUrl(url);
-        config.setUsername(ConfigManager.MySQL.USER);
-        config.setPassword(ConfigManager.MySQL.PASSWORD);
+        //config.setJdbcUrl(url);
+        //config.setUsername(ConfigManager.MySQL.USER);
+        //config.setPassword(ConfigManager.MySQL.PASSWORD);
         config.setMaximumPoolSize(3);
         config.setMinimumIdle(1);
         config.setConnectionTimeout(30000);

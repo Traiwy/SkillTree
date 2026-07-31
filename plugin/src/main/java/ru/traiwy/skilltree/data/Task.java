@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import ru.traiwy.skilltree.enums.Status;
-import ru.traiwy.skilltree.manager.ConfigManager;
 
 
 @Getter

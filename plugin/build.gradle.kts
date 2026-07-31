@@ -30,10 +30,9 @@ dependencies {
     implementation("com.mysql:mysql-connector-j:8.4.0")
     implementation("com.google.code.gson:gson:2.13.2")
 }
-
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(26))
+        languageVersion.set(JavaLanguageVersion.of(21))
     }
 }
 
@@ -57,6 +56,14 @@ tasks.processResources {
 
 tasks.jar {
     archiveFileName.set("skilltree.jar")
+}
+
+
+tasks.shadowJar {
+    archiveFileName.set("skilltree.jar")
+    archiveClassifier.set("")
+
+    mergeServiceFiles()
 }
 
 tasks.build{
