@@ -1,6 +1,8 @@
 package ru.traiwy.skilltree.command;
 
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.tree.LiteralCommandNode;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -15,10 +17,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.traiwy.skilltree.configuration.MessageConfiguration;
 import ru.traiwy.skilltree.enums.Skill;
-import ru.traiwy.skilltree.inv.impl.AlchemistMenu;
-import ru.traiwy.skilltree.inv.impl.ChoiceMenu;
-import ru.traiwy.skilltree.inv.impl.FarmerMenu;
-import ru.traiwy.skilltree.inv.impl.WarriorMenu;
+import ru.traiwy.skilltree.inv.MenuManager;
+import ru.traiwy.skilltree.inv.context.MainContext;
 import ru.traiwy.skilltree.storage.MySqlStorage;
 
 import java.util.Arrays;
@@ -29,24 +29,20 @@ import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public final class AdminCommand implements CommandExecutor, TabCompleter {
+public final class AdminCommand{
     JavaPlugin plugin;
     MySqlStorage mySqlStorage;
-    ChoiceMenu choiceMenu;
-    WarriorMenu warriorMenu;
-    FarmerMenu farmerMenu;
-    AlchemistMenu alchemistMenu;
-
     MessageConfiguration message;
+    MenuManager manager;
 
-    private final String[] SUBCOMMAND = {"info", "addtask", "start"};
-
-    @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-
-        Commands.literal("skill")
+    public LiteralCommandNode<CommandSourceStack> createCommand() {
+        return Commands.literal("skill")
                 .executes(ctx ->{
-                    Player player = (Player)ctx.getSource();
+                    CommandSender sender = ctx.getSource().getSender();
+                    if(!(sender instanceof Player player)) {
+                        return 0;
+                    }
+                    manager.getMainMenu().open(player, new MainContext());
                     player.sendMessage(message.commandNotFound());
                     return 1;
                 })
@@ -71,23 +67,9 @@ public final class AdminCommand implements CommandExecutor, TabCompleter {
                         .executes(ctx -> {
                             menuCommandExecutor((Player) ctx.getSource());
                             return 1;
-                        }));
+                        })
+                ).build();
 
-        return true;
-    }
-
-    @Override
-    public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-
-        if(args.length == 1){
-           String current = args[0].toLowerCase();
-
-           return Arrays.stream(SUBCOMMAND)
-                   .filter(k -> k.startsWith(current))
-                   .collect(Collectors.toList());
-        }
-
-        return Collections.emptyList();
     }
 
     public void showInfoPlayer(Player player) {
@@ -108,10 +90,10 @@ public final class AdminCommand implements CommandExecutor, TabCompleter {
                     }
                 }, null);
             } else {
-                p.getScheduler().run(plugin, task -> {
-                    p.openInventory(choiceMenu.getInventory());
-                    p.sendMessage("§aВыберите свой класс!");
-                }, null);
+               //p.getScheduler().run(plugin, task -> {
+               //    p.openInventory(choiceMenu.getInventory());
+               //    p.sendMessage("§aВыберите свой класс!");
+               //}, null);
             }
         });
     }

@@ -24,12 +24,15 @@ public abstract class AbstractMenu<C extends MenuContext> implements Menu<C>{
 				getTitle(context)
 		);
 
+		holder.setInventory(inventory);
+
 		render(player, inventory, context);
+		System.out.println(1);
 		player.openInventory(inventory);
 	}
 	protected abstract int getSize();
 
-	protected abstract Component getTitle(C context);
+	protected abstract String getTitle(C context);
 
 	protected abstract void render(
 			Player player,

@@ -1,14 +1,12 @@
 package ru.traiwy.skilltree;
 
+import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
+import org.bukkit.plugin.java.JavaPlugin;
 import ru.traiwy.skilltree.command.AdminCommand;
 import ru.traiwy.skilltree.configuration.PluginConfiguration;
-import ru.traiwy.skilltree.inv.impl.AlchemistMenu;
-import ru.traiwy.skilltree.inv.impl.ChoiceMenu;
-import org.bukkit.plugin.java.JavaPlugin;
-
-import ru.traiwy.skilltree.inv.impl.FarmerMenu;
-import ru.traiwy.skilltree.inv.impl.WarriorMenu;
-import ru.traiwy.skilltree.manager.*;
+import ru.traiwy.skilltree.inv.MenuManager;
+import ru.traiwy.skilltree.manager.EventManager;
+import ru.traiwy.skilltree.manager.ItemManager;
 import ru.traiwy.skilltree.storage.MySqlStorage;
 
 public final class SkillTree extends JavaPlugin {
@@ -23,19 +21,23 @@ public final class SkillTree extends JavaPlugin {
         final ItemManager itemManager = new ItemManager(mySqlStorage, this);
         final EventManager eventManager = new EventManager( mySqlStorage);
 
-        final WarriorMenu warriorMenu = new WarriorMenu( itemManager, this);
-        final FarmerMenu farmerMenuHolder = new FarmerMenu( itemManager, this);
-        final AlchemistMenu alchemistMenu = new AlchemistMenu( itemManager, this);
         final PluginConfiguration pluginConfiguration = new PluginConfiguration(this);
 
+        MenuManager menuManager = new MenuManager();
+        AdminCommand adminCommand = new AdminCommand(
+                this,
+                mySqlStorage,
+                pluginConfiguration.getMessage(),
+                menuManager
+        );
 
-        final ChoiceMenu choiceMenu = new ChoiceMenu(
-                warriorMenu,
-                farmerMenuHolder,
-                alchemistMenu,
-                mySqlStorage);
-        getCommand("skilltree").setExecutor(new AdminCommand(this, mySqlStorage, choiceMenu, warriorMenu, farmerMenuHolder, alchemistMenu, pluginConfiguration.getMessage()));
-        getServer().getPluginManager().registerEvents(choiceMenu, this);
+        this.getLifecycleManager().registerEventHandler(
+                LifecycleEvents.COMMANDS,
+                event -> event.registrar().register(
+                        adminCommand.createCommand(),
+                        "SkillTree command"
+                )
+        );
     }
 
 }

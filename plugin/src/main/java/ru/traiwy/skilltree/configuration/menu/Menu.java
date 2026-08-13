@@ -1,9 +1,6 @@
 package ru.traiwy.skilltree.configuration.menu;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 import net.kyori.adventure.text.Component;
 import org.bukkit.event.inventory.InventoryType;
@@ -13,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Getter
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public final class Menu {
@@ -39,13 +37,19 @@ public final class Menu {
 				char symbol = line.charAt(colum);
 				if(symbol == '_') continue;
 
-				Icon icon = icons.get(String.valueOf(symbol));
-				if(icon == null) throw  new IllegalArgumentException("Symbol " + symbol +  "  not found");
-
+				String key = String.valueOf(symbol);
+				if(!icons.containsKey(key)) continue;
+				Icon icon = icons.get(key);
+				if(icon == null) continue;
 				int slot = row * 9 + colum;
 				result.put(slot, icon);
 			}
 		}
 		return result;
+	}
+
+	public int getSize(){
+		int columns = layout.size();
+		return columns * 9;
 	}
 }

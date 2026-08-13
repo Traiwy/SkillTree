@@ -12,5 +12,5 @@ import net.kyori.adventure.text.Component;
 @Accessors(fluent = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public final class MessageConfiguration {
-	 Component commandNotFound = Component.empty();
+	 String commandNotFound = "Команда не найдена";
 }
